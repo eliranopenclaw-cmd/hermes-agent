@@ -592,6 +592,12 @@ def load_gateway_config() -> GatewayConfig:
                         bridged["channel_prompts"] = {str(k): v for k, v in channel_prompts.items()}
                     else:
                         bridged["channel_prompts"] = channel_prompts
+                if "sender_identity_map" in platform_cfg:
+                    sender_identity_map = platform_cfg["sender_identity_map"]
+                    if isinstance(sender_identity_map, dict):
+                        bridged["sender_identity_map"] = {str(k): v for k, v in sender_identity_map.items()}
+                    else:
+                        bridged["sender_identity_map"] = sender_identity_map
                 if not bridged:
                     continue
                 plat_data = platforms_data.setdefault(plat.value, {})
@@ -903,10 +909,32 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
     
     # WhatsApp (typically uses different auth mechanism)
     whatsapp_enabled = os.getenv("WHATSAPP_ENABLED", "").lower() in ("true", "1", "yes")
-    if whatsapp_enabled:
+    whatsapp_dm_policy = os.getenv("WHATSAPP_DM_POLICY")
+    whatsapp_allowed = os.getenv("WHATSAPP_ALLOWED_USERS")
+    whatsapp_group_policy = os.getenv("WHATSAPP_GROUP_POLICY")
+    whatsapp_group_allowed = os.getenv("WHATSAPP_GROUP_ALLOWED_USERS")
+    if whatsapp_enabled or whatsapp_dm_policy or whatsapp_allowed or whatsapp_group_policy or whatsapp_group_allowed:
         if Platform.WHATSAPP not in config.platforms:
             config.platforms[Platform.WHATSAPP] = PlatformConfig()
         config.platforms[Platform.WHATSAPP].enabled = True
+    if whatsapp_dm_policy:
+        config.platforms[Platform.WHATSAPP].extra["dm_policy"] = str(whatsapp_dm_policy).strip().lower()
+    if whatsapp_allowed:
+        config.platforms[Platform.WHATSAPP].extra["allow_from"] = [part.strip() for part in str(whatsapp_allowed).split(",") if part.strip()]
+    if whatsapp_group_policy:
+        config.platforms[Platform.WHATSAPP].extra["group_policy"] = str(whatsapp_group_policy).strip().lower()
+    if whatsapp_group_allowed:
+        config.platforms[Platform.WHATSAPP].extra["group_allow_from"] = [part.strip() for part in str(whatsapp_group_allowed).split(",") if part.strip()]
+    whatsapp_home = os.getenv("WHATSAPP_HOME_CHANNEL")
+    if whatsapp_home:
+        if Platform.WHATSAPP not in config.platforms:
+            config.platforms[Platform.WHATSAPP] = PlatformConfig()
+        config.platforms[Platform.WHATSAPP].enabled = True
+        config.platforms[Platform.WHATSAPP].home_channel = HomeChannel(
+            platform=Platform.WHATSAPP,
+            chat_id=whatsapp_home,
+            name=os.getenv("WHATSAPP_HOME_CHANNEL_NAME", "Home"),
+        )
     
     # Slack
     slack_token = os.getenv("SLACK_BOT_TOKEN")

@@ -867,6 +867,11 @@ def resolve_channel_prompt(
 
     Returns the prompt string, or None if no match is found.  Blank/whitespace-
     only prompts are treated as absent.
+
+    Supports inline prompt text or ``@file:/absolute/path.md`` references.
+    File-backed prompts are read at resolution time so repo-local persona files
+    can serve as the source of truth without duplicating large prompt strings in
+    ``config.yaml``.
     """
     prompts = config_extra.get("channel_prompts") or {}
     if not isinstance(prompts, dict):
@@ -879,8 +884,19 @@ def resolve_channel_prompt(
         if prompt is None:
             continue
         prompt = str(prompt).strip()
-        if prompt:
-            return prompt
+        if not prompt:
+            continue
+        if prompt.startswith("@file:"):
+            file_path = Path(os.path.expanduser(prompt[len("@file:"):].strip()))
+            try:
+                file_prompt = file_path.read_text(encoding="utf-8").strip()
+            except OSError as e:
+                logger.warning("Failed to read channel prompt file %s: %s", file_path, e)
+                return None
+            if file_prompt:
+                return file_prompt
+            return None
+        return prompt
     return None
 
 

@@ -1901,6 +1901,31 @@ def _wait_for_gateway_exit(timeout: float = 10.0, force_after: float | None = 5.
     return True
 
 
+def _wait_for_launchd_service_restart(previous_pid: int, timeout: float = 30.0) -> bool:
+    """Wait for launchd to bring the gateway back after an in-process restart request."""
+    import time
+    from gateway.status import get_running_pid
+
+    label = get_launchd_label()
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            loaded = subprocess.run(
+                ["launchctl", "list", label],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            ).returncode == 0
+        except (subprocess.TimeoutExpired, OSError):
+            loaded = False
+
+        new_pid = get_running_pid()
+        if loaded and new_pid is not None and new_pid != previous_pid:
+            return True
+        time.sleep(1)
+    return False
+
+
 def launchd_restart():
     label = get_launchd_label()
     target = f"{_launchd_domain()}/{label}"
@@ -1910,7 +1935,18 @@ def launchd_restart():
     try:
         pid = get_running_pid()
         if pid is not None and _request_gateway_self_restart(pid):
-            print("✓ Service restart requested")
+            print("⏳ launchd service draining active work...")
+            if _wait_for_launchd_service_restart(pid):
+                print("✓ Service restarted")
+                return
+            print("⚠ launchd service did not come back after self-restart request; forcing recovery")
+            plist_path = get_launchd_plist_path()
+            if _probe_launchd_service_running():
+                subprocess.run(["launchctl", "kickstart", "-k", target], check=True, timeout=90)
+            else:
+                subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=True, timeout=30)
+                subprocess.run(["launchctl", "kickstart", target], check=True, timeout=30)
+            print("✓ Service restarted")
             return
         if pid is not None:
             try:

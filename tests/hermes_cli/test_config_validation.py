@@ -137,6 +137,51 @@ class TestFallbackModelValidation:
         assert len(fb_issues) == 0
 
 
+class TestFallbackProvidersValidation:
+    """fallback_providers should be a list of dict entries."""
+
+    def test_non_list_fallback_providers(self):
+        issues = validate_config_structure({
+            "fallback_providers": "ollama",
+        })
+        assert any("fallback_providers should be a list" in i.message for i in issues)
+
+    def test_string_entry_warns(self):
+        issues = validate_config_structure({
+            "fallback_providers": ["Ollama"],
+        })
+        assert any("fallback_providers[0]" in i.message and "will be ignored" in i.message for i in issues)
+
+    def test_missing_provider_warns(self):
+        issues = validate_config_structure({
+            "fallback_providers": [{"model": "gemma3:4b"}],
+        })
+        assert any("missing 'provider'" in i.message for i in issues)
+
+    def test_missing_model_warns(self):
+        issues = validate_config_structure({
+            "fallback_providers": [{"provider": "custom"}],
+        })
+        assert any("missing 'model'" in i.message for i in issues)
+
+    def test_valid_fallback_chain_has_no_fallback_issues(self):
+        issues = validate_config_structure({
+            "fallback_providers": [
+                {
+                    "provider": "custom",
+                    "model": "gemma3:4b",
+                    "base_url": "http://localhost:11434/v1",
+                },
+                {
+                    "provider": "openrouter",
+                    "model": "google/gemini-3-flash-preview",
+                },
+            ],
+        })
+        fb_issues = [i for i in issues if "fallback" in i.message.lower()]
+        assert len(fb_issues) == 0
+
+
 class TestMissingModelSection:
     """Warn when custom_providers exists but model section is missing."""
 

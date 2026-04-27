@@ -29,6 +29,10 @@ from typing import Dict, Optional, Any
 
 from hermes_constants import get_hermes_dir
 
+
+def _whatsapp_inbound_debug_path() -> Path:
+    return Path(get_hermes_dir("logs/whatsapp_inbound_debug.jsonl", "logs/whatsapp_inbound_debug.jsonl"))
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,6 +82,7 @@ from gateway.platforms.base import (
     SUPPORTED_DOCUMENT_TYPES,
     cache_image_from_url,
     cache_audio_from_url,
+    resolve_channel_prompt,
 )
 
 
@@ -197,6 +202,28 @@ class WhatsAppAdapter(BasePlatformAdapter):
             return chat_id in self._group_allow_from
         # "open" — all groups allowed
         return True
+
+    def _log_inbound_debug(self, stage: str, data: Dict[str, Any], *, event: Optional[MessageEvent] = None, reason: Optional[str] = None) -> None:
+        """Append a lightweight WhatsApp inbound trace entry for live diagnosis."""
+        try:
+            path = _whatsapp_inbound_debug_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            entry = {
+                "stage": stage,
+                "message_id": data.get("messageId"),
+                "chat_id": str(data.get("chatId") or ""),
+                "chat_name": data.get("chatName"),
+                "sender_id": data.get("senderId") or data.get("from"),
+                "sender_name": data.get("senderName"),
+                "is_group": bool(data.get("isGroup", False)),
+                "body": str(data.get("body") or ""),
+                "reason": reason,
+                "channel_prompt_present": bool(getattr(event, "channel_prompt", None)) if event else False,
+            }
+            with path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception as e:
+            logger.debug("[%s] Failed to write WhatsApp inbound debug log: %s", self.name, e)
 
     def _compile_mention_patterns(self):
         patterns = self.config.extra.get("mention_patterns")
@@ -595,6 +622,16 @@ class WhatsAppAdapter(BasePlatformAdapter):
         if not content:
             return content
 
+        # Remove the boilerplate assistant headline when it appears as the
+        # first visible lines in a messaging reply, including the live
+        # response-box variant that prefixes with ⚕ and a separator line.
+        content = re.sub(
+            r"^\s*(?:⚕\s*)?(?:#{1,6}\s+|\*\*|__|\*)?Hermes Agent(?:\*\*|__|\*)?\s*(?:\n\s*[─\-]{4,}\s*)?(?:\n\s*)+",
+            "",
+            content,
+            flags=re.IGNORECASE,
+        )
+
         # --- 1. Protect fenced code blocks from formatting changes ---
         _FENCE_PH = "\x00FENCE"
         fences: list[str] = []
@@ -716,12 +753,13 @@ class WhatsAppAdapter(BasePlatformAdapter):
             return SendResult(success=False, error=bridge_exit)
         try:
             import aiohttp
+            formatted = self.format_message(content)
             async with self._http_session.post(
                 f"http://127.0.0.1:{self._bridge_port}/edit",
                 json={
                     "chatId": chat_id,
                     "messageId": message_id,
-                    "message": content,
+                    "message": formatted,
                 },
                 timeout=aiohttp.ClientTimeout(total=15)
             ) as resp:
@@ -925,7 +963,9 @@ class WhatsAppAdapter(BasePlatformAdapter):
     async def _build_message_event(self, data: Dict[str, Any]) -> Optional[MessageEvent]:
         """Build a MessageEvent from bridge message data, downloading images to cache."""
         try:
+            self._log_inbound_debug("received", data)
             if not self._should_process_message(data):
+                self._log_inbound_debug("filtered", data, reason="policy_or_mention_gate")
                 return None
 
             # Determine message type
@@ -1038,7 +1078,12 @@ class WhatsAppAdapter(BasePlatformAdapter):
                         except Exception as e:
                             print(f"[{self.name}] Failed to read document text: {e}", flush=True)
 
-            return MessageEvent(
+            _channel_prompt = resolve_channel_prompt(
+                self.config.extra,
+                str(data.get("chatId", "") or ""),
+            )
+
+            event = MessageEvent(
                 text=body,
                 message_type=msg_type,
                 source=source,
@@ -1046,7 +1091,11 @@ class WhatsAppAdapter(BasePlatformAdapter):
                 message_id=data.get("messageId"),
                 media_urls=cached_urls,
                 media_types=media_types,
+                channel_prompt=_channel_prompt,
             )
+            self._log_inbound_debug("built", data, event=event)
+            return event
         except Exception as e:
+            self._log_inbound_debug("build_error", data, reason=str(e))
             print(f"[{self.name}] Error building event: {e}")
             return None

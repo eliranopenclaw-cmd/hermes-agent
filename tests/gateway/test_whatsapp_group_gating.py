@@ -1,5 +1,7 @@
+import asyncio
 import json
 from unittest.mock import AsyncMock
+from pathlib import Path
 
 from gateway.config import Platform, PlatformConfig, load_gateway_config
 
@@ -112,7 +114,12 @@ def test_config_bridges_whatsapp_group_settings(monkeypatch, tmp_path):
         "whatsapp:\n"
         "  require_mention: true\n"
         "  mention_patterns:\n"
-        "    - \"^\\\\s*chompy\\\\b\"\n",
+        "    - \"^\\\\s*chompy\\\\b\"\n"
+        "  sender_identity_map:\n"
+        "    '+972506705646':\n"
+        "      name: 'מרים אלדרוטי'\n"
+        "      gender: 'female'\n"
+        "      role: 'primary'\n",
         encoding="utf-8",
     )
 
@@ -125,6 +132,7 @@ def test_config_bridges_whatsapp_group_settings(monkeypatch, tmp_path):
     assert config is not None
     assert config.platforms[Platform.WHATSAPP].extra["require_mention"] is True
     assert config.platforms[Platform.WHATSAPP].extra["mention_patterns"] == [r"^\s*chompy\b"]
+    assert config.platforms[Platform.WHATSAPP].extra["sender_identity_map"]["+972506705646"]["name"] == "מרים אלדרוטי"
     assert __import__("os").environ["WHATSAPP_REQUIRE_MENTION"] == "true"
     assert json.loads(__import__("os").environ["WHATSAPP_MENTION_PATTERNS"]) == [r"^\s*chompy\b"]
 
@@ -254,7 +262,9 @@ def test_config_bridges_whatsapp_dm_and_group_policy(monkeypatch, tmp_path):
         "  dm_policy: disabled\n"
         "  group_policy: allowlist\n"
         "  group_allow_from:\n"
-        "    - \"120363001234567890@g.us\"\n",
+        "    - \"120363001234567890@g.us\"\n"
+        "  channel_prompts:\n"
+        "    \"120363001234567890@g.us\": \"מסעודה תמיד עונה בעברית\"\n",
         encoding="utf-8",
     )
 
@@ -269,6 +279,9 @@ def test_config_bridges_whatsapp_dm_and_group_policy(monkeypatch, tmp_path):
     assert config.platforms[Platform.WHATSAPP].extra["dm_policy"] == "disabled"
     assert config.platforms[Platform.WHATSAPP].extra["group_policy"] == "allowlist"
     assert config.platforms[Platform.WHATSAPP].extra["group_allow_from"] == ["120363001234567890@g.us"]
+    assert config.platforms[Platform.WHATSAPP].extra["channel_prompts"] == {
+        "120363001234567890@g.us": "מסעודה תמיד עונה בעברית"
+    }
     assert __import__("os").environ["WHATSAPP_DM_POLICY"] == "disabled"
     assert __import__("os").environ["WHATSAPP_GROUP_POLICY"] == "allowlist"
     assert __import__("os").environ["WHATSAPP_GROUP_ALLOWED_USERS"] == "120363001234567890@g.us"
@@ -296,3 +309,85 @@ def test_config_bridges_whatsapp_allow_from(monkeypatch, tmp_path):
     assert config.platforms[Platform.WHATSAPP].extra["allow_from"] == ["6281234567890@s.whatsapp.net"]
     assert __import__("os").environ["WHATSAPP_DM_POLICY"] == "allowlist"
     assert __import__("os").environ["WHATSAPP_ALLOWED_USERS"] == "6281234567890@s.whatsapp.net"
+
+
+def test_build_message_event_sets_channel_prompt_for_whatsapp_group(tmp_path):
+    adapter = _make_adapter(group_policy="allowlist", group_allow_from=["120363001234567890@g.us"])
+    prompt_path = tmp_path / "masuda-prompt.md"
+    prompt_path.write_text("מסעודה עונה רק בעברית ובחום", encoding="utf-8")
+    adapter.config.extra["channel_prompts"] = {
+        "120363001234567890@g.us": f"@file:{prompt_path}"
+    }
+
+    event = asyncio.run(adapter._build_message_event({
+        "isGroup": True,
+        "body": "שלום מסעודה",
+        "chatId": "120363001234567890@g.us",
+        "chatName": "Masuda",
+        "senderId": "972500000000@s.whatsapp.net",
+        "senderName": "Miriam",
+        "messageId": "wamid-1",
+        "mediaUrls": [],
+        "mentionedIds": [],
+        "botIds": [],
+        "quotedParticipant": "",
+    }))
+
+    assert event is not None
+    assert event.channel_prompt == "מסעודה עונה רק בעברית ובחום"
+
+
+def test_build_message_event_writes_inbound_debug_log(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    adapter = _make_adapter(group_policy="allowlist", group_allow_from=["120363001234567890@g.us"], require_mention=False)
+    prompt_path = tmp_path / "masuda-prompt.md"
+    prompt_path.write_text("מסעודה עונה בעברית", encoding="utf-8")
+    adapter.config.extra["channel_prompts"] = {
+        "120363001234567890@g.us": f"@file:{prompt_path}"
+    }
+
+    event = asyncio.run(adapter._build_message_event({
+        "isGroup": True,
+        "body": "מה שלומך מסעודה",
+        "chatId": "120363001234567890@g.us",
+        "chatName": "Masuda",
+        "senderId": "972500000000@s.whatsapp.net",
+        "senderName": "Miriam",
+        "messageId": "wamid-debug-1",
+        "mediaUrls": [],
+        "mentionedIds": [],
+        "botIds": [],
+        "quotedParticipant": "",
+    }))
+
+    assert event is not None
+    debug_path = Path(tmp_path) / "logs" / "whatsapp_inbound_debug.jsonl"
+    assert debug_path.exists()
+    lines = [json.loads(line) for line in debug_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert [line["stage"] for line in lines] == ["received", "built"]
+    assert lines[-1]["chat_id"] == "120363001234567890@g.us"
+    assert lines[-1]["channel_prompt_present"] is True
+
+
+def test_group_allowlisted_whatsapp_chat_authorizes_without_sender_allowlist(monkeypatch):
+    from gateway.run import GatewayRunner
+    from gateway.config import GatewayConfig
+    from gateway.session import SessionSource
+
+    gw = GatewayRunner.__new__(GatewayRunner)
+    gw.config = GatewayConfig()
+    gw.pairing_store = AsyncMock()
+    gw.pairing_store.is_approved = lambda platform_name, user_id: False
+
+    source = SessionSource(
+        platform=Platform.WHATSAPP,
+        chat_id="120363427147164635@g.us",
+        chat_type="group",
+        user_id="207618769473605@lid",
+        user_name="Eliran Aldoroti",
+    )
+
+    with __import__('unittest').mock.patch.dict('os.environ', {
+        'WHATSAPP_GROUP_ALLOWED_USERS': '120363427147164635@g.us',
+    }, clear=True):
+        assert gw._is_user_authorized(source) is True

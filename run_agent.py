@@ -1266,6 +1266,12 @@ class AIAgent:
                 f for f in fallback_model
                 if isinstance(f, dict) and f.get("provider") and f.get("model")
             ]
+            _invalid_fallback_count = len(fallback_model) - len(self._fallback_chain)
+            if _invalid_fallback_count:
+                logging.warning(
+                    "Ignoring %d invalid fallback_providers entries; expected dicts with non-empty 'provider' and 'model'",
+                    _invalid_fallback_count,
+                )
         elif isinstance(fallback_model, dict) and fallback_model.get("provider") and fallback_model.get("model"):
             self._fallback_chain = [fallback_model]
         else:

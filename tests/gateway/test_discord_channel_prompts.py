@@ -111,6 +111,13 @@ class TestResolveChannelPrompts:
         adapter.config.extra = {"channel_prompts": {"100": "Research mode"}}
         assert adapter._resolve_channel_prompt("100") == "Research mode"
 
+    def test_file_backed_prompt_is_loaded(self, tmp_path):
+        prompt_path = tmp_path / "masuda.md"
+        prompt_path.write_text("מסעודה מדברת רק בעברית", encoding="utf-8")
+        adapter = _make_adapter()
+        adapter.config.extra = {"channel_prompts": {"100": f"@file:{prompt_path}"}}
+        assert adapter._resolve_channel_prompt("100") == "מסעודה מדברת רק בעברית"
+
     def test_numeric_yaml_keys_normalized_at_config_load(self):
         """Numeric YAML keys are normalized to strings by config bridging.
 

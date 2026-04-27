@@ -3089,6 +3089,7 @@ class HermesCLI:
         API call is marked accordingly.
         """
         from hermes_cli.models import resolve_fast_mode_overrides
+        from hermes_cli.request_routing import resolve_turn_route
 
         runtime = {
             "api_key": self.api_key,
@@ -3099,18 +3100,11 @@ class HermesCLI:
             "args": list(self.acp_args or []),
             "credential_pool": getattr(self, "_credential_pool", None),
         }
-        route = {
-            "model": self.model,
-            "runtime": runtime,
-            "signature": (
-                self.model,
-                runtime["provider"],
-                runtime["base_url"],
-                runtime["api_mode"],
-                runtime["command"],
-                tuple(runtime["args"]),
-            ),
-        }
+        route = resolve_turn_route(
+            user_message,
+            current_model=self.model,
+            current_runtime=runtime,
+        )
 
         service_tier = getattr(self, "service_tier", None)
         if not service_tier:
@@ -3124,7 +3118,7 @@ class HermesCLI:
         route["request_overrides"] = overrides
         return route
 
-    def _init_agent(self, *, model_override: str = None, runtime_override: dict = None, request_overrides: dict | None = None) -> bool:
+    def _init_agent(self, *, model_override: str = None, runtime_override: dict = None, request_overrides: dict | None = None, fallback_override=None) -> bool:
         """
         Initialize the agent on first use.
         When resuming a session, restores conversation history from SQLite.
@@ -3225,7 +3219,7 @@ class HermesCLI:
                 clarify_callback=self._clarify_callback,
                 reasoning_callback=self._current_reasoning_callback(),
 
-                fallback_model=self._fallback_model,
+                fallback_model=fallback_override or self._fallback_model,
                 thinking_callback=self._on_thinking,
                 checkpoints_enabled=self.checkpoints_enabled,
                 checkpoint_max_snapshots=self.checkpoint_max_snapshots,
@@ -5650,7 +5644,15 @@ class HermesCLI:
                 print(f"  Next run: {result['job'].get('next_run_at')}")
             elif action == "run":
                 print(f"(^_^)b Triggered job: {result['job']['name']} ({job_id})")
-                print("  It will run on the next scheduler tick.")
+                if result.get('job', {}).get('next_run_at'):
+                    print(f"  Next run: {result['job'].get('next_run_at')}")
+                run_result = result.get('run') or {}
+                if run_result.get('output_file'):
+                    print(f"  Output:    {run_result['output_file']}")
+                if run_result.get('success'):
+                    print("  Executed immediately.")
+                else:
+                    print(f"  Execution error: {run_result.get('error', 'unknown error')}")
             else:
                 removed = result.get("removed_job", {})
                 print(f"(^_^)b Removed job: {removed.get('name', job_id)} ({job_id})")
@@ -6202,7 +6204,7 @@ class HermesCLI:
                     provider_sort=self._provider_sort,
                     provider_require_parameters=self._provider_require_params,
                     provider_data_collection=self._provider_data_collection,
-                    fallback_model=self._fallback_model,
+                    fallback_model=turn_route.get("fallback_model", self._fallback_model),
                 )
                 # Silence raw spinner; route thinking through TUI widget when no foreground agent is active.
                 bg_agent._print_fn = lambda *_a, **_kw: None
@@ -6339,7 +6341,7 @@ class HermesCLI:
                     provider_sort=self._provider_sort,
                     provider_require_parameters=self._provider_require_params,
                     provider_data_collection=self._provider_data_collection,
-                    fallback_model=self._fallback_model,
+                    fallback_model=turn_route.get("fallback_model", self._fallback_model),
                     session_db=None,
                     skip_memory=True,
                     skip_context_files=True,
@@ -8135,6 +8137,7 @@ class HermesCLI:
             model_override=turn_route["model"],
             runtime_override=turn_route["runtime"],
             request_overrides=turn_route.get("request_overrides"),
+            fallback_override=turn_route.get("fallback_model"),
         ):
             return None
         
@@ -10756,6 +10759,7 @@ def main(
                     model_override=turn_route["model"],
                     runtime_override=turn_route["runtime"],
                     request_overrides=turn_route.get("request_overrides"),
+                    fallback_override=turn_route.get("fallback_model"),
                 ):
                     cli.agent.quiet_mode = True
                     cli.agent.suppress_status_output = True

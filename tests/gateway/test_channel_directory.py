@@ -39,6 +39,21 @@ class TestLoadDirectory:
             result = load_directory()
         assert result["platforms"]["telegram"][0]["name"] == "John"
 
+    def test_filters_stale_whatsapp_entries_by_current_policy(self, tmp_path):
+        cache_file = _write_directory(tmp_path, {
+            "whatsapp": [
+                {"id": "972556839467@lid", "name": "Hermes", "type": "dm"},
+                {"id": "120363001234567890@g.us", "name": "Mother Bot Group", "type": "group"},
+            ]
+        })
+        with patch.dict(os.environ, {
+            "WHATSAPP_DM_POLICY": "disabled",
+            "WHATSAPP_GROUP_POLICY": "disabled",
+        }, clear=False):
+            with patch("gateway.channel_directory.DIRECTORY_PATH", cache_file):
+                result = load_directory()
+        assert result["platforms"]["whatsapp"] == []
+
     def test_corrupt_file(self, tmp_path):
         cache_file = tmp_path / "channel_directory.json"
         cache_file.write_text("{bad json")
@@ -162,6 +177,22 @@ class TestBuildFromSessions:
         sessions_path = tmp_path / "sessions" / "sessions.json"
         sessions_path.parent.mkdir(parents=True)
         sessions_path.write_text(json.dumps(sessions_data))
+
+    def test_whatsapp_home_channel_is_listed_when_allowlisted_group_has_no_session_history(self, tmp_path):
+        with patch.dict(os.environ, {
+            "HERMES_HOME": str(tmp_path),
+            "WHATSAPP_GROUP_POLICY": "allowlist",
+            "WHATSAPP_GROUP_ALLOWED_USERS": "120363427147164635@g.us",
+            "WHATSAPP_HOME_CHANNEL": "120363427147164635@g.us",
+            "WHATSAPP_HOME_CHANNEL_NAME": "Masuda",
+        }, clear=False):
+            directory = build_channel_directory({})
+
+        whatsapp_entries = directory["platforms"]["whatsapp"]
+        assert any(
+            entry["id"] == "120363427147164635@g.us" and entry["name"] == "Masuda" and entry["type"] == "group"
+            for entry in whatsapp_entries
+        )
 
     def test_builds_from_sessions_json(self, tmp_path):
         self._write_sessions(tmp_path, {

@@ -2158,6 +2158,48 @@ def validate_config_structure(config: Optional[Dict[str, Any]] = None) -> List["
             "Move fallback_model to the top level of config.yaml (no indentation)",
         ))
 
+    # ── fallback_providers must be a list of dicts with provider + model ───
+    fallback_chain = config.get("fallback_providers")
+    if fallback_chain is not None:
+        if not isinstance(fallback_chain, list):
+            issues.append(ConfigIssue(
+                "error",
+                f"fallback_providers should be a list of dicts, got {type(fallback_chain).__name__}",
+                "Change to:\n"
+                "  fallback_providers:\n"
+                "    - provider: custom\n"
+                "      model: gemma3:4b\n"
+                "      base_url: http://localhost:11434/v1\n"
+                "    - provider: openrouter\n"
+                "      model: google/gemini-3-flash-preview",
+            ))
+        else:
+            for i, entry in enumerate(fallback_chain):
+                if not isinstance(entry, dict):
+                    issues.append(ConfigIssue(
+                        "warning",
+                        f"fallback_providers[{i}] should be a dict with 'provider' and 'model' — got {type(entry).__name__}; entry will be ignored",
+                        "Use:\n"
+                        "  - provider: custom\n"
+                        "    model: gemma3:4b\n"
+                        "    base_url: http://localhost:11434/v1",
+                    ))
+                    continue
+                if not entry:
+                    continue
+                if not entry.get("provider"):
+                    issues.append(ConfigIssue(
+                        "warning",
+                        f"fallback_providers[{i}] is missing 'provider' — entry will be ignored",
+                        "Add: provider: openrouter (or another provider)",
+                    ))
+                if not entry.get("model"):
+                    issues.append(ConfigIssue(
+                        "warning",
+                        f"fallback_providers[{i}] is missing 'model' — entry will be ignored",
+                        "Add: model: anthropic/claude-sonnet-4 (or another model)",
+                    ))
+
     # ── model section: should exist when custom_providers is configured ──
     model_cfg = config.get("model")
     if cp and not model_cfg:

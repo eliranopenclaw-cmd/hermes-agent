@@ -8,6 +8,7 @@ action="list" and for resolving human-friendly channel names to numeric IDs.
 
 import json
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +18,35 @@ from utils import atomic_json_write
 logger = logging.getLogger(__name__)
 
 DIRECTORY_PATH = get_hermes_home() / "channel_directory.json"
+
+
+def _filter_directory_by_current_policy(directory: Dict[str, Any]) -> Dict[str, Any]:
+    """Hide stale WhatsApp entries that no longer pass current policy.
+
+    The cached directory can outlive policy changes in ~/.hermes/.env or config,
+    especially across restarts and pairing flows. Filter on read so blocked DM/group
+    entries are not exposed by send_message(action='list') or name resolution even
+    if an older cache file still contains them.
+    """
+    platforms = directory.get("platforms")
+    if not isinstance(platforms, dict):
+        return directory
+
+    whatsapp_entries = platforms.get("whatsapp")
+    if not isinstance(whatsapp_entries, list):
+        return directory
+
+    filtered = [
+        entry
+        for entry in whatsapp_entries
+        if _whatsapp_policy_allows_directory_entry(entry.get("id", ""), entry.get("type", "dm"))
+    ]
+    if len(filtered) != len(whatsapp_entries):
+        platforms = dict(platforms)
+        platforms["whatsapp"] = filtered
+        directory = dict(directory)
+        directory["platforms"] = platforms
+    return directory
 
 
 def _normalize_channel_query(value: str) -> str:
@@ -153,34 +183,78 @@ def _build_slack(adapter) -> List[Dict[str, str]]:
     return _build_from_sessions("slack")
 
 
+def _whatsapp_policy_allows_directory_entry(chat_id: str, chat_type: str) -> bool:
+    """Return whether a WhatsApp session-origin directory entry should be exposed."""
+    normalized_chat_id = str(chat_id or "").strip()
+    normalized_type = str(chat_type or "dm").strip().lower()
+    is_group = normalized_chat_id.endswith("@g.us") or normalized_type == "group"
+
+    if is_group:
+        group_policy = os.getenv("WHATSAPP_GROUP_POLICY", "open").strip().lower()
+        if group_policy == "disabled":
+            return False
+        if group_policy == "allowlist":
+            allowed = {
+                part.strip()
+                for part in os.getenv("WHATSAPP_GROUP_ALLOWED_USERS", "").split(",")
+                if part.strip()
+            }
+            return normalized_chat_id in allowed
+        return True
+
+    dm_policy = os.getenv("WHATSAPP_DM_POLICY", "open").strip().lower()
+    if dm_policy == "disabled":
+        return False
+    if dm_policy == "allowlist":
+        allowed = {
+            part.strip()
+            for part in os.getenv("WHATSAPP_ALLOWED_USERS", "").split(",")
+            if part.strip()
+        }
+        return normalized_chat_id in allowed
+    return True
+
+
 def _build_from_sessions(platform_name: str) -> List[Dict[str, str]]:
     """Pull known channels/contacts from sessions.json origin data."""
     sessions_path = get_hermes_home() / "sessions" / "sessions.json"
-    if not sessions_path.exists():
-        return []
 
     entries = []
+    seen_ids = set()
     try:
-        with open(sessions_path, encoding="utf-8") as f:
-            data = json.load(f)
+        if sessions_path.exists():
+            with open(sessions_path, encoding="utf-8") as f:
+                data = json.load(f)
 
-        seen_ids = set()
-        for _key, session in data.items():
-            origin = session.get("origin") or {}
-            if origin.get("platform") != platform_name:
-                continue
-            entry_id = _session_entry_id(origin)
-            if not entry_id or entry_id in seen_ids:
-                continue
-            seen_ids.add(entry_id)
-            entries.append({
-                "id": entry_id,
-                "name": _session_entry_name(origin),
-                "type": session.get("chat_type", "dm"),
-                "thread_id": origin.get("thread_id"),
-            })
+            for _key, session in data.items():
+                origin = session.get("origin") or {}
+                if origin.get("platform") != platform_name:
+                    continue
+                entry_id = _session_entry_id(origin)
+                if not entry_id or entry_id in seen_ids:
+                    continue
+                entry = {
+                    "id": entry_id,
+                    "name": _session_entry_name(origin),
+                    "type": session.get("chat_type", "dm"),
+                    "thread_id": origin.get("thread_id"),
+                }
+                if platform_name == "whatsapp" and not _whatsapp_policy_allows_directory_entry(entry["id"], entry["type"]):
+                    continue
+                seen_ids.add(entry_id)
+                entries.append(entry)
     except Exception as e:
         logger.debug("Channel directory: failed to read sessions for %s: %s", platform_name, e)
+
+    if platform_name == "whatsapp":
+        whatsapp_home = os.getenv("WHATSAPP_HOME_CHANNEL", "").strip()
+        if whatsapp_home and whatsapp_home not in seen_ids and _whatsapp_policy_allows_directory_entry(whatsapp_home, "group" if whatsapp_home.endswith("@g.us") else "dm"):
+            entries.append({
+                "id": whatsapp_home,
+                "name": os.getenv("WHATSAPP_HOME_CHANNEL_NAME", "Home").strip() or "Home",
+                "type": "group" if whatsapp_home.endswith("@g.us") else "dm",
+                "thread_id": None,
+            })
 
     return entries
 
@@ -195,7 +269,7 @@ def load_directory() -> Dict[str, Any]:
         return {"updated_at": None, "platforms": {}}
     try:
         with open(DIRECTORY_PATH, encoding="utf-8") as f:
-            return json.load(f)
+            return _filter_directory_by_current_policy(json.load(f))
     except Exception:
         return {"updated_at": None, "platforms": {}}
 

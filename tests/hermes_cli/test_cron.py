@@ -17,7 +17,7 @@ def tmp_cron_dir(tmp_path, monkeypatch):
 
 
 class TestCronCommandLifecycle:
-    def test_pause_resume_run(self, tmp_cron_dir, capsys):
+    def test_pause_resume_run(self, tmp_cron_dir, capsys, monkeypatch):
         job = create_job(prompt="Check server status", schedule="every 1h")
 
         cron_command(Namespace(cron_command="pause", job_id=job["id"]))
@@ -28,6 +28,16 @@ class TestCronCommandLifecycle:
         resumed = get_job(job["id"])
         assert resumed["state"] == "scheduled"
 
+        monkeypatch.setattr(
+            "cron.scheduler.run_job_now",
+            lambda incoming_job_id, **kwargs: {
+                "success": True,
+                "output_file": "/tmp/cron-output.md",
+                "final_response": "done",
+                "error": None,
+                "delivery_error": None,
+            },
+        )
         cron_command(Namespace(cron_command="run", job_id=job["id"]))
         triggered = get_job(job["id"])
         assert triggered["state"] == "scheduled"
@@ -36,6 +46,8 @@ class TestCronCommandLifecycle:
         assert "Paused job" in out
         assert "Resumed job" in out
         assert "Triggered job" in out
+        assert "Executed immediately." in out
+        assert "/tmp/cron-output.md" in out
 
     def test_edit_can_replace_and_clear_skills(self, tmp_cron_dir, capsys):
         job = create_job(

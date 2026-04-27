@@ -231,3 +231,24 @@ class TestUnifiedCronjobTool:
         assert updated["success"] is True
         assert updated["job"]["skills"] == []
         assert updated["job"]["skill"] is None
+
+    def test_run_executes_immediately_and_returns_run_metadata(self, monkeypatch):
+        created = json.loads(cronjob(action="create", prompt="Check", schedule="every 1h"))
+        job_id = created["job_id"]
+
+        monkeypatch.setattr(
+            "cron.scheduler.run_job_now",
+            lambda incoming_job_id: {
+                "success": True,
+                "output_file": "/tmp/cron-output.md",
+                "final_response": "done",
+                "error": None,
+                "delivery_error": None,
+            },
+        )
+
+        result = json.loads(cronjob(action="run", job_id=job_id))
+        assert result["success"] is True
+        assert result["job"]["job_id"] == job_id
+        assert result["run"]["success"] is True
+        assert result["run"]["output_file"] == "/tmp/cron-output.md"

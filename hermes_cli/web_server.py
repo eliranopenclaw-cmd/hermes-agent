@@ -1839,11 +1839,17 @@ async def resume_cron_job(job_id: str):
 
 @app.post("/api/cron/jobs/{job_id}/trigger")
 async def trigger_cron_job(job_id: str):
-    from cron.jobs import trigger_job
-    job = trigger_job(job_id)
-    if not job:
+    from cron.jobs import get_job
+    from cron.scheduler import run_job_now
+
+    run_result = run_job_now(job_id)
+    if run_result is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    return job
+    job = get_job(job_id)
+    return {
+        "job": job,
+        "run": run_result,
+    }
 
 
 @app.delete("/api/cron/jobs/{job_id}")

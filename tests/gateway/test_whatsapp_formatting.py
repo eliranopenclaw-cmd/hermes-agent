@@ -69,6 +69,26 @@ class _AsyncCM:
 class TestFormatMessage:
     """WhatsApp markdown conversion."""
 
+    def test_leading_hermes_agent_header_removed(self):
+        adapter = _make_adapter()
+        content = "# Hermes Agent\n\nשלום מרי-רוז 💕"
+        assert adapter.format_message(content) == "שלום מרי-רוז 💕"
+
+    def test_leading_bold_hermes_agent_header_removed(self):
+        adapter = _make_adapter()
+        content = "**Hermes Agent**\n\nלילה טוב חביבתי"
+        assert adapter.format_message(content) == "לילה טוב חביבתי"
+
+    def test_leading_whatsapp_bold_hermes_agent_header_removed(self):
+        adapter = _make_adapter()
+        content = "*Hermes Agent*\n\nבוקר טוב אלירן"
+        assert adapter.format_message(content) == "בוקר טוב אלירן"
+
+    def test_live_response_box_hermes_agent_header_removed(self):
+        adapter = _make_adapter()
+        content = "⚕ *Hermes Agent*\n────────────\nאיזה יופי אלירן חביבי"
+        assert adapter.format_message(content) == "איזה יופי אלירן חביבי"
+
     def test_bold_double_asterisk(self):
         adapter = _make_adapter()
         assert adapter.format_message("**hello**") == "*hello*"
@@ -208,6 +228,19 @@ class TestSendChunking:
         call_args = adapter._http_session.post.call_args
         payload = call_args.kwargs.get("json") or call_args[1].get("json")
         assert payload["message"] == "*bold text*"
+
+    @pytest.mark.asyncio
+    async def test_format_applied_before_edit(self):
+        """Edited WhatsApp messages should also be formatted before sending."""
+        adapter = _make_adapter()
+        resp = MagicMock(status=200)
+        adapter._http_session.post = MagicMock(return_value=_AsyncCM(resp))
+
+        await adapter.edit_message("chat1", "msg1", "*Hermes Agent*\n\nשלום אלירן")
+
+        call_args = adapter._http_session.post.call_args
+        payload = call_args.kwargs.get("json") or call_args[1].get("json")
+        assert payload["message"] == "שלום אלירן"
 
     @pytest.mark.asyncio
     async def test_reply_to_only_on_first_chunk(self):

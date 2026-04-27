@@ -280,6 +280,26 @@ class TestLoadGatewayConfig:
             "789": "Creative writing",
         }
 
+    def test_whatsapp_home_channel_from_env_enables_platform(self, tmp_path, monkeypatch):
+        hermes_home = tmp_path / ".hermes"
+        hermes_home.mkdir()
+        (hermes_home / "config.yaml").write_text("{}\n", encoding="utf-8")
+
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("WHATSAPP_HOME_CHANNEL", "189735196692533@lid")
+        monkeypatch.setenv("WHATSAPP_HOME_CHANNEL_NAME", "Hermes")
+        monkeypatch.setenv("WHATSAPP_GROUP_POLICY", "allowlist")
+        monkeypatch.setenv("WHATSAPP_GROUP_ALLOWED_USERS", "120363427147164635@g.us")
+
+        config = load_gateway_config()
+
+        assert config.platforms[Platform.WHATSAPP].enabled is True
+        assert config.platforms[Platform.WHATSAPP].home_channel is not None
+        assert config.platforms[Platform.WHATSAPP].home_channel.chat_id == "189735196692533@lid"
+        assert config.platforms[Platform.WHATSAPP].home_channel.name == "Hermes"
+        assert config.platforms[Platform.WHATSAPP].extra["group_policy"] == "allowlist"
+        assert config.platforms[Platform.WHATSAPP].extra["group_allow_from"] == ["120363427147164635@g.us"]
+
     def test_bridges_slack_channel_prompts_from_config_yaml(self, tmp_path, monkeypatch):
         hermes_home = tmp_path / ".hermes"
         hermes_home.mkdir()

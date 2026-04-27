@@ -790,6 +790,21 @@ class TestParseTargetRefE164:
         assert chat_id == "+15551234567"
         assert is_explicit is True
 
+    def test_whatsapp_lid_jid_is_explicit(self):
+        chat_id, _, is_explicit = _parse_target_ref("whatsapp", "189735196692533@lid")
+        assert chat_id == "189735196692533@lid"
+        assert is_explicit is True
+
+    def test_whatsapp_s_whatsapp_net_jid_is_explicit(self):
+        chat_id, _, is_explicit = _parse_target_ref("whatsapp", "15551234567@s.whatsapp.net")
+        assert chat_id == "15551234567@s.whatsapp.net"
+        assert is_explicit is True
+
+    def test_whatsapp_group_jid_is_explicit(self):
+        chat_id, _, is_explicit = _parse_target_ref("whatsapp", "120363402576040000@g.us")
+        assert chat_id == "120363402576040000@g.us"
+        assert is_explicit is True
+
     def test_signal_bare_digits_still_work(self):
         """Bare digit strings continue to match the generic numeric branch."""
         chat_id, _, is_explicit = _parse_target_ref("signal", "15551234567")

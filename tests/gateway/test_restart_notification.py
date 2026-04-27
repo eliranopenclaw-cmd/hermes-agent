@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -44,6 +45,7 @@ async def test_restart_command_writes_notify_file(tmp_path, monkeypatch):
     data = json.loads(notify_path.read_text())
     assert data["platform"] == "telegram"
     assert data["chat_id"] == "42"
+    assert data["session_key"] == build_session_key(source)
     assert "thread_id" not in data  # no thread → omitted
 
 
@@ -111,6 +113,7 @@ async def test_restart_command_preserves_thread_id(tmp_path, monkeypatch):
 
     data = json.loads((tmp_path / ".restart_notify.json").read_text())
     assert data["thread_id"] == "topic_7"
+    assert data["session_key"] == build_session_key(source)
 
 
 # ── _send_restart_notification ───────────────────────────────────────────
@@ -118,24 +121,42 @@ async def test_restart_command_preserves_thread_id(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_send_restart_notification_delivers_and_cleans_up(tmp_path, monkeypatch):
-    """On startup, the notification is sent and the file is removed."""
+    """On startup, the notification is sent with latest context and the file is removed."""
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
 
     notify_path = tmp_path / ".restart_notify.json"
     notify_path.write_text(json.dumps({
         "platform": "telegram",
         "chat_id": "42",
+        "session_key": "agent:main:telegram:dm:42:u1",
     }))
 
     runner, adapter = make_restart_runner()
     adapter.send = AsyncMock()
+    runner.session_store._ensure_loaded = MagicMock()
+    runner.session_store._entries = {
+        "agent:main:telegram:dm:42:u1": MagicMock(
+            session_id="sess-1",
+            display_name="Operator DM",
+            updated_at=datetime(2026, 4, 26, 23, 58, 0),
+            origin=make_restart_source(chat_id="42"),
+        )
+    }
+    runner._session_db = MagicMock()
+    runner._session_db._get_session_rich_row.return_value = {
+        "title": "Fix Telegram auto recovery",
+        "preview": "Investigate launchd restart path for Telegram",
+        "last_active": 1714241880.0,
+    }
 
     await runner._send_restart_notification()
 
     adapter.send.assert_called_once()
     call_args = adapter.send.call_args
     assert call_args[0][0] == "42"  # chat_id
-    assert "restarted" in call_args[0][1].lower()
+    assert "recovered successfully" in call_args[0][1].lower()
+    assert "fix telegram auto recovery" in call_args[0][1].lower()
+    assert "investigate launchd restart path" in call_args[0][1].lower()
     assert call_args[1].get("metadata") is None  # no thread
     assert not notify_path.exists()
 
@@ -177,7 +198,7 @@ async def test_send_restart_notification_noop_when_no_file(tmp_path, monkeypatch
 
 @pytest.mark.asyncio
 async def test_send_restart_notification_skips_when_adapter_missing(tmp_path, monkeypatch):
-    """If the requester's platform isn't connected, clean up without crashing."""
+    """If the requester's platform isn't connected yet, keep the file for a later recovery notification."""
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
 
     notify_path = tmp_path / ".restart_notify.json"
@@ -190,15 +211,14 @@ async def test_send_restart_notification_skips_when_adapter_missing(tmp_path, mo
 
     await runner._send_restart_notification()
 
-    # File cleaned up even though we couldn't send
-    assert not notify_path.exists()
+    assert notify_path.exists()
 
 
 @pytest.mark.asyncio
 async def test_send_restart_notification_cleans_up_on_send_failure(
     tmp_path, monkeypatch
 ):
-    """If the adapter.send() raises, the file is still cleaned up."""
+    """If the send fails, keep the file so recovery notification can retry later."""
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
 
     notify_path = tmp_path / ".restart_notify.json"
@@ -212,4 +232,4 @@ async def test_send_restart_notification_cleans_up_on_send_failure(
 
     await runner._send_restart_notification()
 
-    assert not notify_path.exists()  # cleaned up despite error
+    assert notify_path.exists()

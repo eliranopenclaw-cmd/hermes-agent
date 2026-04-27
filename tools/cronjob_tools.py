@@ -329,8 +329,20 @@ def cronjob(
             return json.dumps({"success": True, "job": _format_job(updated)}, indent=2)
 
         if normalized in {"run", "run_now", "trigger"}:
-            updated = trigger_job(job_id)
-            return json.dumps({"success": True, "job": _format_job(updated)}, indent=2)
+            from cron.scheduler import run_job_now
+
+            run_result = run_job_now(job_id)
+            if run_result is None:
+                return tool_error(f"Failed to run job '{job_id}'", success=False)
+            updated = get_job(job_id)
+            return json.dumps(
+                {
+                    "success": True,
+                    "job": _format_job(updated) if updated else _format_job(job),
+                    "run": run_result,
+                },
+                indent=2,
+            )
 
         if normalized == "update":
             updates: Dict[str, Any] = {}

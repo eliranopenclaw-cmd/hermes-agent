@@ -12,6 +12,7 @@
  *   POST /send-media     - Send media natively { chatId, filePath, mediaType?, caption?, fileName? }
  *   POST /typing         - Send typing indicator { chatId }
  *   GET  /chat/:id       - Get chat info
+ *   GET  /groups         - List participating WhatsApp groups
  *   GET  /health         - Health check
  *
  * Usage:
@@ -54,11 +55,17 @@ const REPLY_PREFIX = process.env.WHATSAPP_REPLY_PREFIX === undefined
   ? DEFAULT_REPLY_PREFIX
   : process.env.WHATSAPP_REPLY_PREFIX.replace(/\\n/g, '\n');
 
-function formatOutgoingMessage(message) {
+function formatOutgoingMessage(message, chatId = '') {
   // In bot mode, messages come from a different number so the prefix is
-  // redundant — the sender identity is already clear.  Only prepend in
-  // self-chat mode where bot and user share the same number.
+  // redundant — the sender identity is already clear.
   if (WHATSAPP_MODE !== 'self-chat') return message;
+
+  // Never prepend the Hermes label in groups. Group identity should come from
+  // the persona itself, not from a transport-level header.
+  if (String(chatId).endsWith('@g.us')) return message;
+
+  // Only prepend in self-chat/direct-chat mode where bot and user share the
+  // same number and the extra label is still desired.
   return REPLY_PREFIX ? `${REPLY_PREFIX}${message}` : message;
 }
 
@@ -209,6 +216,7 @@ async function startSocket() {
       const senderId = msg.key.participant || chatId;
       const isGroup = chatId.endsWith('@g.us');
       const senderNumber = senderId.replace(/@.*/, '');
+      const senderPhone = lidToPhone[senderNumber] || senderNumber;
 
       // Handle fromMe messages based on mode
       if (msg.key.fromMe) {
@@ -350,6 +358,7 @@ async function startSocket() {
         messageId: msg.key.id,
         chatId,
         senderId,
+        senderPhone,
         senderName: msg.pushName || senderNumber,
         chatName: isGroup ? (chatId.split('@')[0]) : (msg.pushName || senderNumber),
         isGroup,
@@ -393,7 +402,7 @@ app.post('/send', async (req, res) => {
   }
 
   try {
-    const sent = await sock.sendMessage(chatId, { text: formatOutgoingMessage(message) });
+    const sent = await sock.sendMessage(chatId, { text: formatOutgoingMessage(message, chatId) });
 
     // Track sent message ID to prevent echo-back loops
     if (sent?.key?.id) {
@@ -422,7 +431,7 @@ app.post('/edit', async (req, res) => {
 
   try {
     const key = { id: messageId, fromMe: true, remoteJid: chatId };
-    await sock.sendMessage(chatId, { text: formatOutgoingMessage(message), edit: key });
+    await sock.sendMessage(chatId, { text: formatOutgoingMessage(message, chatId), edit: key });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -548,6 +557,26 @@ app.get('/chat/:id', async (req, res) => {
     isGroup,
     participants: [],
   });
+});
+
+// Group discovery
+app.get('/groups', async (_req, res) => {
+  if (!sock || connectionState !== 'connected') {
+    return res.status(503).json({ error: 'WhatsApp not connected' });
+  }
+
+  try {
+    const groups = await sock.groupFetchAllParticipating();
+    const entries = Object.entries(groups || {}).map(([id, meta]) => ({
+      id,
+      name: meta?.subject || id.replace(/@.*/, ''),
+      participants: Array.isArray(meta?.participants) ? meta.participants.map(p => p.id) : [],
+    }));
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+    return res.json({ groups: entries });
+  } catch (err) {
+    return res.status(500).json({ error: err?.message || String(err) });
+  }
 });
 
 // Health check

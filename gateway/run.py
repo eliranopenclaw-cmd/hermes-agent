@@ -1108,6 +1108,7 @@ class GatewayRunner:
         accordingly.
         """
         from hermes_cli.models import resolve_fast_mode_overrides
+        from hermes_cli.request_routing import resolve_turn_route
 
         runtime = {
             "api_key": runtime_kwargs.get("api_key"),
@@ -1118,18 +1119,11 @@ class GatewayRunner:
             "args": list(runtime_kwargs.get("args") or []),
             "credential_pool": runtime_kwargs.get("credential_pool"),
         }
-        route = {
-            "model": model,
-            "runtime": runtime,
-            "signature": (
-                model,
-                runtime["provider"],
-                runtime["base_url"],
-                runtime["api_mode"],
-                runtime["command"],
-                tuple(runtime["args"]),
-            ),
-        }
+        route = resolve_turn_route(
+            user_message,
+            current_model=model,
+            current_runtime=runtime,
+        )
 
         service_tier = getattr(self, "_service_tier", None)
         if not service_tier:
@@ -2440,6 +2434,10 @@ class GatewayRunner:
                             build_channel_directory(self.adapters)
                         except Exception:
                             pass
+
+                        # If this reconnect restored the platform that requested
+                        # a restart notification, deliver it now.
+                        await self._send_restart_notification()
                     else:
                         # Check if the failure is non-retryable
                         if adapter.has_fatal_error and not adapter.fatal_error_retryable:
@@ -2877,6 +2875,7 @@ class GatewayRunner:
             Platform.QQBOT: "QQ_ALLOWED_USERS",
         }
         platform_group_env_map = {
+            Platform.WHATSAPP: "WHATSAPP_GROUP_ALLOWED_USERS",
             Platform.QQBOT: "QQ_GROUP_ALLOWED_USERS",
         }
         platform_allow_all_map = {
@@ -3769,6 +3768,8 @@ class GatewayRunner:
         if _is_shared_thread and source.user_name:
             message_text = f"[{source.user_name}] {message_text}"
 
+        message_text = self._apply_whatsapp_group_speaker_context(event, message_text)
+
         if event.media_urls:
             image_paths = []
             audio_paths = []
@@ -3899,6 +3900,60 @@ class GatewayRunner:
             except Exception as exc:
                 logger.debug("@ context reference expansion failed: %s", exc)
 
+        return message_text
+
+    @staticmethod
+    def _normalize_sender_phone(value: str) -> str:
+        if not value:
+            return ""
+        raw = str(value).strip()
+        digits = "".join(ch for ch in raw if ch.isdigit())
+        if raw.startswith("+") and digits:
+            return f"+{digits}"
+        if digits.startswith("972"):
+            return f"+{digits}"
+        return digits or raw
+
+    def _resolve_whatsapp_sender_identity(self, event: MessageEvent):
+        source = event.source
+        if source.platform != Platform.WHATSAPP or source.chat_type != "group":
+            return None
+        platform_cfg = self.config.platforms.get(Platform.WHATSAPP) if getattr(self, "config", None) else None
+        extra = getattr(platform_cfg, "extra", {}) if platform_cfg else {}
+        identity_map = extra.get("sender_identity_map") if isinstance(extra, dict) else None
+        if not isinstance(identity_map, dict) or not identity_map:
+            return None
+
+        raw_message = event.raw_message if isinstance(event.raw_message, dict) else {}
+        sender_phone = self._normalize_sender_phone(raw_message.get("senderPhone", ""))
+        sender_name = str(source.user_name or "").strip()
+
+        for raw_key, meta in identity_map.items():
+            normalized_key = self._normalize_sender_phone(str(raw_key))
+            if sender_phone and normalized_key and sender_phone == normalized_key:
+                if isinstance(meta, dict):
+                    return meta
+                return {"name": str(meta)}
+
+        for meta in identity_map.values():
+            if isinstance(meta, dict):
+                mapped_name = str(meta.get("name") or "").strip()
+                if mapped_name and sender_name and mapped_name == sender_name:
+                    return meta
+        return None
+
+    def _apply_whatsapp_group_speaker_context(self, event: MessageEvent, message_text: str) -> str:
+        identity = self._resolve_whatsapp_sender_identity(event)
+        source = event.source
+        if identity:
+            name = str(identity.get("name") or source.user_name or "unknown").strip()
+            gender = str(identity.get("gender") or "unknown").strip()
+            role = str(identity.get("role") or "participant").strip()
+            marker = f"[Speaker: {name} | gender: {gender} | role: {role}]"
+            return f"{marker}\n{message_text}" if message_text else marker
+        if source.platform == Platform.WHATSAPP and source.chat_type == "group" and source.user_name:
+            marker = f"[Speaker: {source.user_name}]"
+            return f"{marker}\n{message_text}" if message_text else marker
         return message_text
 
     async def _handle_message_with_agent(self, event, source, _quick_key: str, run_generation: int):
@@ -5144,6 +5199,7 @@ class GatewayRunner:
             notify_data = {
                 "platform": event.source.platform.value if event.source.platform else None,
                 "chat_id": event.source.chat_id,
+                "session_key": self._session_key_for_source(event.source),
             }
             if event.source.thread_id:
                 notify_data["thread_id"] = event.source.thread_id
@@ -6434,7 +6490,7 @@ class GatewayRunner:
                     platform=platform_key,
                     user_id=source.user_id,
                     session_db=self._session_db,
-                    fallback_model=self._fallback_model,
+                    fallback_model=turn_route.get("fallback_model", self._fallback_model),
                 )
                 try:
                     return agent.run_conversation(
@@ -6615,7 +6671,7 @@ class GatewayRunner:
                     session_id=task_id,
                     platform=platform_key,
                     session_db=None,
-                    fallback_model=self._fallback_model,
+                    fallback_model=turn_route.get("fallback_model", self._fallback_model),
                     skip_memory=True,
                     skip_context_files=True,
                     persist_session=False,
@@ -7984,13 +8040,13 @@ class GatewayRunner:
 
         return True
 
-    async def _send_restart_notification(self) -> None:
-        """Notify the chat that initiated /restart that the gateway is back."""
+    async def _send_restart_notification(self) -> bool:
+        """Notify the requester when restart recovery is complete."""
         import json as _json
 
         notify_path = _hermes_home / ".restart_notify.json"
         if not notify_path.exists():
-            return
+            return False
 
         try:
             data = _json.loads(notify_path.read_text())
@@ -7999,32 +8055,119 @@ class GatewayRunner:
             thread_id = data.get("thread_id")
 
             if not platform_str or not chat_id:
-                return
+                notify_path.unlink(missing_ok=True)
+                return False
 
             platform = Platform(platform_str)
             adapter = self.adapters.get(platform)
             if not adapter:
                 logger.debug(
-                    "Restart notification skipped: %s adapter not connected",
+                    "Restart notification pending: %s adapter not connected yet",
                     platform_str,
                 )
-                return
+                return False
 
             metadata = {"thread_id": thread_id} if thread_id else None
             await adapter.send(
                 chat_id,
-                "♻ Gateway restarted successfully. Your session continues.",
+                self._build_restart_notification_message(platform, data),
                 metadata=metadata,
             )
+            notify_path.unlink(missing_ok=True)
             logger.info(
                 "Sent restart notification to %s:%s",
                 platform_str,
                 chat_id,
             )
+            return True
         except Exception as e:
             logger.warning("Restart notification failed: %s", e)
-        finally:
-            notify_path.unlink(missing_ok=True)
+            return False
+
+    def _build_restart_notification_message(self, platform: Platform, notify_data: dict) -> str:
+        """Build a restart-recovery notification with best-effort latest context lookup."""
+        platform_label = "Telegram" if platform == Platform.TELEGRAM else platform.value.title()
+        lines = [f"♻ {platform_label} recovered successfully after gateway restart."]
+        context_summary = self._find_restart_context_summary(notify_data)
+        if context_summary:
+            lines.append("")
+            lines.append("I found the latest context automatically:")
+            lines.extend(context_summary)
+        lines.append("")
+        lines.append("Send any message to continue from the latest context.")
+        return "\n".join(lines)
+
+    def _find_restart_context_summary(self, notify_data: dict) -> list[str]:
+        """Return a compact latest-context summary for a restart notification."""
+        session_store = getattr(self, "session_store", None)
+        if session_store is None:
+            return []
+
+        try:
+            session_store._ensure_loaded()
+        except Exception:
+            return []
+
+        session_key = notify_data.get("session_key")
+        platform_str = notify_data.get("platform")
+        chat_id = str(notify_data.get("chat_id") or "")
+        thread_id = str(notify_data.get("thread_id") or "") or None
+        entry = None
+
+        if session_key:
+            entry = session_store._entries.get(session_key)
+
+        if entry is None:
+            matching = []
+            for candidate in getattr(session_store, "_entries", {}).values():
+                origin = getattr(candidate, "origin", None)
+                if origin is None or not getattr(origin, "platform", None):
+                    continue
+                if origin.platform.value != platform_str:
+                    continue
+                if str(origin.chat_id) != chat_id:
+                    continue
+                candidate_thread = str(origin.thread_id) if getattr(origin, "thread_id", None) else None
+                if candidate_thread != thread_id:
+                    continue
+                matching.append(candidate)
+            if matching:
+                matching.sort(key=lambda item: getattr(item, "updated_at", None) or datetime.min, reverse=True)
+                entry = matching[0]
+
+        if entry is None:
+            return []
+
+        title = None
+        preview = None
+        last_active = None
+        session_db = getattr(self, "_session_db", None)
+        session_id = getattr(entry, "session_id", None)
+        if session_db is not None and session_id:
+            try:
+                row = session_db._get_session_rich_row(session_id)
+            except Exception:
+                row = None
+            if row:
+                _title = row.get("title")
+                _preview = row.get("preview")
+                _last_active = row.get("last_active")
+                title = str(_title).strip() or None if _title is not None else None
+                preview = str(_preview).strip() or None if _preview is not None else None
+                last_active = str(_last_active).strip() or None if _last_active is not None else None
+
+        display_name = getattr(entry, "display_name", None)
+        if not title and isinstance(display_name, str):
+            title = display_name.strip() or None
+
+        summary = []
+        if title:
+            summary.append(f"• Latest context: {title}")
+        if preview:
+            summary.append(f"• Preview: {preview}")
+        if last_active:
+            summary.append(f"• Last active: {last_active}")
+        return summary
 
     def _set_session_env(self, context: SessionContext) -> list:
         """Set session context variables for the current async task.
@@ -9653,7 +9796,7 @@ class GatewayRunner:
                     user_id=source.user_id,
                     gateway_session_key=session_key,
                     session_db=self._session_db,
-                    fallback_model=self._fallback_model,
+                    fallback_model=turn_route.get("fallback_model", self._fallback_model),
                 )
                 if _cache_lock and _cache is not None:
                     with _cache_lock:

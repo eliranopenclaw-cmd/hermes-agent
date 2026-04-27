@@ -246,7 +246,13 @@ def _job_action(action: str, job_id: str, success_verb: str) -> int:
     if action in {"resume", "run"} and result.get("job", {}).get("next_run_at"):
         print(f"  Next run: {result['job']['next_run_at']}")
     if action == "run":
-        print("  It will run on the next scheduler tick.")
+        run_result = result.get("run") or {}
+        if run_result.get("output_file"):
+            print(f"  Output:    {run_result['output_file']}")
+        if run_result.get("success"):
+            print("  Executed immediately.")
+        else:
+            print(f"  Execution error: {run_result.get('error', 'unknown error')}")
     return 0
 
 

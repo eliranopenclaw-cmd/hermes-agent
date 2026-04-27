@@ -552,6 +552,28 @@ class TestNewEndpoints:
         resp = self.client.get("/api/cron/jobs/nonexistent-id")
         assert resp.status_code == 404
 
+    def test_cron_trigger_executes_immediately(self, monkeypatch):
+        from cron.jobs import create_job
+
+        job = create_job(prompt="Check", schedule="every 1h")
+        monkeypatch.setattr(
+            "cron.scheduler.run_job_now",
+            lambda job_id, **kwargs: {
+                "success": True,
+                "output_file": "/tmp/cron-output.md",
+                "final_response": "done",
+                "error": None,
+                "delivery_error": None,
+            },
+        )
+
+        resp = self.client.post(f"/api/cron/jobs/{job['id']}/trigger")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["job"]["id"] == job["id"]
+        assert data["run"]["success"] is True
+        assert data["run"]["output_file"] == "/tmp/cron-output.md"
+
     def test_skills_list(self):
         resp = self.client.get("/api/skills")
         assert resp.status_code == 200

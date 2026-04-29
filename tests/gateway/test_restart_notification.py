@@ -10,7 +10,7 @@ import pytest
 
 import gateway.run as gateway_run
 from gateway.config import Platform
-from gateway.platforms.base import MessageEvent, MessageType
+from gateway.platforms.base import MessageEvent, MessageType, SendResult
 from gateway.session import build_session_key
 from tests.gateway.restart_test_helpers import (
     make_restart_runner,
@@ -232,4 +232,27 @@ async def test_send_restart_notification_cleans_up_on_send_failure(
 
     await runner._send_restart_notification()
 
+    assert notify_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_send_restart_notification_keeps_file_on_unsuccessful_send_result(
+    tmp_path, monkeypatch
+):
+    """If adapter.send returns SendResult(success=False), keep the file for retry."""
+    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
+
+    notify_path = tmp_path / ".restart_notify.json"
+    notify_path.write_text(json.dumps({
+        "platform": "telegram",
+        "chat_id": "123456",
+    }))
+
+    runner, adapter = make_restart_runner()
+    adapter.send = AsyncMock(return_value=SendResult(success=False, error="Chat not found"))
+
+    result = await runner._send_restart_notification()
+
+    assert result is False
+    adapter.send.assert_awaited_once()
     assert notify_path.exists()

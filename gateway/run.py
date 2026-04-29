@@ -8203,11 +8203,19 @@ class GatewayRunner:
                 return False
 
             metadata = {"thread_id": thread_id} if thread_id else None
-            await adapter.send(
+            send_result = await adapter.send(
                 chat_id,
                 self._build_restart_notification_message(platform, data),
                 metadata=metadata,
             )
+            if send_result is not None and hasattr(send_result, "success") and not send_result.success:
+                logger.warning(
+                    "Restart notification failed for %s:%s: %s",
+                    platform_str,
+                    chat_id,
+                    getattr(send_result, "error", "unknown send failure"),
+                )
+                return False
             notify_path.unlink(missing_ok=True)
             logger.info(
                 "Sent restart notification to %s:%s",

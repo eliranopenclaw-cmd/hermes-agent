@@ -1,0 +1,1091 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e5]:
+      - button "Dashboard" [ref=e6] [cursor=pointer]: ◫
+      - button "Tasks" [ref=e7] [cursor=pointer]: ☰
+      - button "Communications" [ref=e8] [cursor=pointer]: ✉
+      - button "Processes" [ref=e9] [cursor=pointer]: ⌘
+      - button "Pipeline" [ref=e11] [cursor=pointer]: ▥
+      - button "Diagnostics" [ref=e12] [cursor=pointer]: ◌
+  - main [ref=e59]:
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - heading "Dashboard" [level=1] [ref=e63]
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - text: ⌕
+            - searchbox "⌕" [ref=e67]
+          - combobox [ref=e69]:
+            - option "All severity" [selected]
+            - option "High"
+            - option "Medium"
+            - option "Low"
+          - button "Compact off" [ref=e70] [cursor=pointer]
+          - button "Rail off" [ref=e71] [cursor=pointer]
+          - button "Refresh now" [ref=e72] [cursor=pointer]
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: Sticky triage
+            - generic [ref=e77]: Operator lane steady
+          - generic [ref=e78]: updated just now
+        - generic [ref=e334]:
+          - generic [ref=e335]:
+            - generic [ref=e336]: attention
+            - strong [ref=e337]: "0"
+            - generic [ref=e338]: operator review items
+          - generic [ref=e339]:
+            - generic [ref=e340]: failures
+            - strong [ref=e341]: "0"
+            - generic [ref=e342]: 0 failing job(s)
+          - generic [ref=e343]:
+            - generic [ref=e344]: due jobs
+            - strong [ref=e345]: "0"
+            - generic [ref=e346]: scheduled pressure
+          - generic [ref=e347]:
+            - generic [ref=e348]: best next
+            - strong [ref=e349]: Pending items
+            - generic [ref=e350]: second-brain-autonomous-improvement-sprint
+        - generic [ref=e351]:
+          - button "Open best next" [ref=e352] [cursor=pointer]
+          - button "Pending items" [ref=e353] [cursor=pointer]
+          - button "Diagnostics" [ref=e354] [cursor=pointer]
+          - button "Comms" [ref=e355] [cursor=pointer]
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]: Operator focus
+            - heading "Above-the-fold triage" [level=2] [ref=e83]
+            - paragraph [ref=e84]: Fastest current scan.
+          - generic [ref=e85]: Critical triage
+        - generic [ref=e356]:
+          - generic [ref=e357]: Critical triage
+          - generic [ref=e358]: Start with second-brain-autonomous-improvement-sprint — warning and failure review currently beats lower-priority workflow browsing.
+        - generic [ref=e359]:
+          - article [ref=e360]:
+            - generic [ref=e361]:
+              - generic [ref=e362]:
+                - generic [ref=e363]: Attention queue
+                - generic [ref=e364]: "0"
+              - generic [ref=e365]: clear
+            - generic [ref=e366]: No pending operator review is currently leading the dashboard.
+          - article [ref=e367]:
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - generic [ref=e370]: Cron pressure
+                - generic [ref=e371]: "0"
+              - generic [ref=e372]: steady
+            - generic [ref=e373]: No near-term cron pressure is visible right now.
+          - article [ref=e374]:
+            - generic [ref=e375]:
+              - generic [ref=e376]:
+                - generic [ref=e377]: Warnings & failures
+                - generic [ref=e378]: "1"
+              - generic [ref=e379]: needs review
+            - generic [ref=e380]: "Traceback (most recent call last):"
+          - article [ref=e381]:
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - generic [ref=e384]: Best next path
+                - generic [ref=e385]: Pending items
+              - generic [ref=e386]: Due soon
+            - generic [ref=e387]: second-brain-autonomous-improvement-sprint
+        - generic [ref=e388]:
+          - button "Open pending items" [ref=e389] [cursor=pointer]
+          - button "Open diagnostics" [ref=e390] [cursor=pointer]
+          - button "Open comms" [ref=e391] [cursor=pointer]
+          - button "Open processes" [ref=e392] [cursor=pointer]
+          - button "Open best next" [ref=e393] [cursor=pointer]
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: Operator brief
+            - heading "Workflow brief" [level=2] [ref=e90]
+            - paragraph [ref=e91]: Priority workflow scan.
+          - generic [ref=e92]: Due soon
+        - generic [ref=e93]:
+          - generic [ref=e394]: Relic Operator is the clearest workflow signal right now.
+          - generic [ref=e395]: Consulting morning update · Due soon · 18h
+        - generic [ref=e396]:
+          - article [ref=e397]:
+            - generic [ref=e398]:
+              - generic [ref=e399]:
+                - img "Architecture / System Design" [ref=e400]
+                - generic [ref=e401]:
+                  - generic [ref=e402]: Relic Operator
+                  - generic [ref=e403]: Consulting morning update
+              - generic [ref=e404]: Due soon
+            - strong [ref=e407]: 18h
+            - generic [ref=e408]: second-brain-daily-improvement-recommendations • 17h
+          - article [ref=e409]:
+            - generic [ref=e410]:
+              - generic [ref=e411]:
+                - img "Architecture / System Design" [ref=e412]
+                - generic [ref=e413]:
+                  - generic [ref=e414]: Astra Shell
+                  - generic [ref=e415]: Command center design
+              - generic [ref=e416]: Due soon
+            - strong [ref=e419]: 2h
+            - generic [ref=e420]: second-brain-autonomous-improvement-sprint • 2h
+          - article [ref=e421]:
+            - generic [ref=e422]:
+              - generic [ref=e423]:
+                - img "Architecture / System Design" [ref=e424]
+                - generic [ref=e425]:
+                  - generic [ref=e426]: Atlas Review
+                  - generic [ref=e427]: Weekly brief assembly
+              - generic [ref=e428]: Standing by
+            - strong [ref=e431]: Ready
+            - generic [ref=e432]: No current action-plan or due-soon pressure for this workflow.
+          - article [ref=e433]:
+            - generic [ref=e434]:
+              - generic [ref=e435]:
+                - img "Architecture / System Design" [ref=e436]
+                - generic [ref=e437]:
+                  - generic [ref=e438]: Nova Brief
+                  - generic [ref=e439]: Daily brief assembly
+              - generic [ref=e440]: Due soon
+            - strong [ref=e443]: 17h
+            - generic [ref=e444]: second-brain-daily-brief-telegram • 17h
+          - article [ref=e445]:
+            - generic [ref=e446]:
+              - generic [ref=e447]:
+                - img "GitHub Analyst" [ref=e448]
+                - generic [ref=e449]:
+                  - generic [ref=e450]: Forge Scout
+                  - generic [ref=e451]: GitHub analyst scan
+              - generic [ref=e452]: Standing by
+            - strong [ref=e455]: Steady
+            - generic [ref=e456]: second-brain-github-analyst-local · 5d
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - generic [ref=e97]: Task flow
+            - heading "Operator task pipeline" [level=2] [ref=e98]
+            - paragraph [ref=e99]: Board view of queue, work, review, blockers, and done.
+          - generic [ref=e100]:
+            - button "Open tasks" [ref=e101] [cursor=pointer]
+            - button "Review queue" [ref=e102] [cursor=pointer]
+        - generic [ref=e104]: Review is carrying the most operator pressure right now.
+        - generic [ref=e457]:
+          - article [ref=e458]:
+            - generic [ref=e459]: Open tasks
+            - generic [ref=e460]: "1"
+            - generic [ref=e461]: Across intake, assignment, execution, review, and blocked lanes.
+          - article [ref=e462]:
+            - generic [ref=e463]: Active now
+            - generic [ref=e464]: "0"
+            - generic [ref=e465]: No active execution lane is visible right now.
+          - article [ref=e466]:
+            - generic [ref=e467]: Blocked
+            - generic [ref=e468]: "0"
+            - generic [ref=e469]: No blocked lane is currently leading.
+          - article [ref=e470]:
+            - generic [ref=e471]: Done
+            - generic [ref=e472]: "3"
+            - generic [ref=e473]: Recent successful completions were detected in the audit trail.
+        - img "Operator task pipeline board" [ref=e474]:
+          - article [ref=e475]:
+            - generic [ref=e476]:
+              - generic [ref=e477]:
+                - generic [ref=e478]: Inbox
+                - generic [ref=e479]: Fresh operator signals
+              - generic [ref=e480]:
+                - generic [ref=e481]: "0"
+                - generic [ref=e482]: WIP 0
+            - generic [ref=e484]: No items are currently sitting in this lane.
+          - article [ref=e485]:
+            - generic [ref=e486]:
+              - generic [ref=e487]:
+                - generic [ref=e488]: Assigned
+                - generic [ref=e489]: Queued next and later
+              - generic [ref=e490]:
+                - generic [ref=e491]: "0"
+                - generic [ref=e492]: WIP 0
+            - generic [ref=e494]: No items are currently sitting in this lane.
+          - article [ref=e495]:
+            - generic [ref=e496]:
+              - generic [ref=e497]:
+                - generic [ref=e498]: In progress
+                - generic [ref=e499]: Active execution now
+              - generic [ref=e500]:
+                - generic [ref=e501]: "0"
+                - generic [ref=e502]: WIP 0
+            - generic [ref=e504]: No items are currently sitting in this lane.
+          - article [ref=e505]:
+            - generic [ref=e506]:
+              - generic [ref=e507]:
+                - generic [ref=e508]: Review
+                - generic [ref=e509]: Verification and approvals
+              - generic [ref=e510]:
+                - generic [ref=e511]: "1"
+                - generic [ref=e512]: WIP 1
+            - article [ref=e514]:
+              - button "GitHub Analyst Repo review queue 2 modified • 6 untracked REVIEW 8 files 8 changed file(s) are waiting for operator review flow. RV Review lane Verification and repo review should happen before wider rollout." [ref=e515] [cursor=pointer]:
+                - generic [ref=e516]:
+                  - generic [ref=e517]:
+                    - img "GitHub Analyst" [ref=e518]
+                    - generic [ref=e519]:
+                      - generic [ref=e520]: Repo review queue
+                      - generic [ref=e521]: 2 modified • 6 untracked
+                  - generic [ref=e522]: ⋮⋮
+                - generic [ref=e523]:
+                  - generic [ref=e524]: REVIEW
+                  - generic [ref=e525]: 8 files
+                - generic [ref=e526]: 8 changed file(s) are waiting for operator review flow.
+                - generic [ref=e528]:
+                  - strong [ref=e529]: RV
+                  - text: Review lane
+                - generic [ref=e530]: Verification and repo review should happen before wider rollout.
+          - article [ref=e531]:
+            - generic [ref=e532]:
+              - generic [ref=e533]:
+                - generic [ref=e534]: Blocked
+                - generic [ref=e535]: Failures and overdue lanes
+              - generic [ref=e536]:
+                - generic [ref=e537]: "0"
+                - generic [ref=e538]: WIP 0
+            - generic [ref=e540]: No items are currently sitting in this lane.
+          - article [ref=e541]:
+            - generic [ref=e542]:
+              - generic [ref=e543]:
+                - generic [ref=e544]: Done
+                - generic [ref=e545]: Recent completions
+              - generic [ref=e546]:
+                - generic [ref=e547]: "3"
+                - generic [ref=e548]: WIP 3
+            - generic [ref=e549]:
+              - article [ref=e550]:
+                - 'button "Finance / Analytics / Forecasting hermes-runtime-continuity-hooks 2026-04-29T13:30:53+0300 DONE 8m ago added live continuity capsule runtime wiring in `/Users/ailab/.hermes/hermes-agent` via `gateway/continuity… OP Ops lane Recently completed work that can be reused as proof or a continuity signal." [ref=e551] [cursor=pointer]':
+                  - generic [ref=e552]:
+                    - generic [ref=e553]:
+                      - img "Finance / Analytics / Forecasting" [ref=e554]
+                      - generic [ref=e555]:
+                        - generic [ref=e556]: hermes-runtime-continuity-hooks
+                        - generic [ref=e557]: 2026-04-29T13:30:53+0300
+                    - generic [ref=e558]: ⋮⋮
+                  - generic [ref=e559]:
+                    - generic [ref=e560]: DONE
+                    - generic [ref=e561]: 8m ago
+                  - generic [ref=e562]: "added live continuity capsule runtime wiring in `/Users/ailab/.hermes/hermes-agent` via `gateway/continuity…"
+                  - generic [ref=e564]:
+                    - strong [ref=e565]: OP
+                    - text: Ops lane
+                  - generic [ref=e566]: Recently completed work that can be reused as proof or a continuity signal.
+              - article [ref=e567]:
+                - 'button "GitHub Analyst continuity-capsule-prototype 2026-04-29T13:13:46+0300 DONE 25m ago implemented `scripts/continuity_capsule.py`, added `tests/test_continuity_capsule.py`, created repo-local d… HX Hermes lane Recently completed work that can be reused as proof or a continuity signal." [ref=e568] [cursor=pointer]':
+                  - generic [ref=e569]:
+                    - generic [ref=e570]:
+                      - img "GitHub Analyst" [ref=e571]
+                      - generic [ref=e572]:
+                        - generic [ref=e573]: continuity-capsule-prototype
+                        - generic [ref=e574]: 2026-04-29T13:13:46+0300
+                    - generic [ref=e575]: ⋮⋮
+                  - generic [ref=e576]:
+                    - generic [ref=e577]: DONE
+                    - generic [ref=e578]: 25m ago
+                  - generic [ref=e579]: "implemented `scripts/continuity_capsule.py`, added `tests/test_continuity_capsule.py`, created repo-local d…"
+                  - generic [ref=e581]:
+                    - strong [ref=e582]: HX
+                    - text: Hermes lane
+                  - generic [ref=e583]: Recently completed work that can be reused as proof or a continuity signal.
+              - article [ref=e584]:
+                - 'button "Finance / Analytics / Forecasting context-continuity-architecture 2026-04-29T12:59:57+0300 DONE 39m ago researched Hermes continuity/reset surfaces, wrote the architecture spec `docs/specs/2026-04-29-hermes-cont… HX Hermes lane Recently completed work that can be reused as proof or a continuity signal." [ref=e585] [cursor=pointer]':
+                  - generic [ref=e586]:
+                    - generic [ref=e587]:
+                      - img "Finance / Analytics / Forecasting" [ref=e588]
+                      - generic [ref=e589]:
+                        - generic [ref=e590]: context-continuity-architecture
+                        - generic [ref=e591]: 2026-04-29T12:59:57+0300
+                    - generic [ref=e592]: ⋮⋮
+                  - generic [ref=e593]:
+                    - generic [ref=e594]: DONE
+                    - generic [ref=e595]: 39m ago
+                  - generic [ref=e596]: "researched Hermes continuity/reset surfaces, wrote the architecture spec `docs/specs/2026-04-29-hermes-cont…"
+                  - generic [ref=e598]:
+                    - strong [ref=e599]: HX
+                    - text: Hermes lane
+                  - generic [ref=e600]: Recently completed work that can be reused as proof or a continuity signal.
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e109]: Support workflow
+            - heading "Support analysis queue" [level=2] [ref=e110]
+            - paragraph [ref=e111]: Tier 2/3 escalation packets and engineering-ready incident briefs.
+          - generic [ref=e112]:
+            - button "Open pipeline" [ref=e113] [cursor=pointer]
+            - button "Review queue" [ref=e114] [cursor=pointer]
+        - generic [ref=e116]: Support-analysis queue is calm right now.
+        - generic [ref=e601]:
+          - article [ref=e602]:
+            - generic [ref=e603]: Open packets
+            - generic [ref=e604]: "0"
+            - generic [ref=e605]: Active Tier 2/3 investigations.
+          - article [ref=e606]:
+            - generic [ref=e607]: Review-ready
+            - generic [ref=e608]: "0"
+            - generic [ref=e609]: Packets ready for engineering or operator review.
+          - article [ref=e610]:
+            - generic [ref=e611]: Resolved
+            - generic [ref=e612]: "0"
+            - generic [ref=e613]: Closed packets captured for reuse.
+        - article [ref=e615]:
+          - generic [ref=e616]: No active support-analysis packets
+          - generic [ref=e617]: Create a support incident packet from the Hermes template to surface it here for review and escalation work.
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - heading "Quick actions" [level=2] [ref=e120]
+            - paragraph [ref=e121]: Fast shortcuts and one workload chart.
+            - generic [ref=e122]: ⌘K / Ctrl+K focus command palette • ↑/↓ move • Enter opens • 1–5 launch visible actions • Curated operations only.
+          - generic [ref=e123]:
+            - text: ⌘K
+            - searchbox "⌘K" [ref=e124]
+        - generic [ref=e125]:
+          - generic [ref=e618]:
+            - generic [ref=e619]:
+              - generic [ref=e620]:
+                - generic [ref=e621]: Now
+                - generic [ref=e622]: "0"
+              - generic [ref=e623]:
+                - generic [ref=e624]: "NO"
+                - generic [ref=e625]:
+                  - generic [ref=e626]: "0"
+                  - generic [ref=e627]: No immediate action
+            - generic [ref=e628]:
+              - generic [ref=e629]:
+                - generic [ref=e630]: Next
+                - generic [ref=e631]: "0"
+              - generic [ref=e632]:
+                - generic [ref=e633]: NE
+                - generic [ref=e634]:
+                  - generic [ref=e635]: "0"
+                  - generic [ref=e636]: No queued review work
+            - generic [ref=e637]:
+              - generic [ref=e638]:
+                - generic [ref=e639]: Later
+                - generic [ref=e640]: "0"
+              - generic [ref=e641]:
+                - generic [ref=e642]: LA
+                - generic [ref=e643]:
+                  - generic [ref=e644]: "0"
+                  - generic [ref=e645]: No deferred actions
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]: Action load
+              - generic [ref=e129]: 0 curated action(s)
+            - img "Action lane chart" [ref=e130]:
+              - generic [ref=e648]: "0"
+              - generic [ref=e649]: Now
+              - generic [ref=e651]: "0"
+              - generic [ref=e652]: Next
+              - generic [ref=e654]: "0"
+              - generic [ref=e655]: Later
+        - generic [ref=e657]: No matching curated actions.
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - heading "Operator workspace" [level=2] [ref=e134]
+            - paragraph [ref=e135]: Pin one path and keep one local note.
+          - generic [ref=e136]:
+            - button "Pin best next" [ref=e137] [cursor=pointer]
+            - button "Clear workspace" [ref=e138] [cursor=pointer]
+        - generic [ref=e139]:
+          - article [ref=e140]:
+            - generic [ref=e141]: Pinned path
+            - generic [ref=e142]: No pinned path yet
+            - generic [ref=e143]: Pin the current best next destination or another operator lane for quick return.
+            - button "Open next" [ref=e658] [cursor=pointer]
+          - article [ref=e145]:
+            - generic [ref=e146]: Operator note
+            - generic [ref=e147]: Local note.
+            - textbox "Local note." [ref=e148]:
+              - /placeholder: Write a local note...
+            - generic [ref=e149]:
+              - button "Save note" [ref=e150] [cursor=pointer]
+              - button "Clear note" [ref=e151] [cursor=pointer]
+          - article [ref=e152]:
+            - generic [ref=e153]: Operator settings
+            - generic [ref=e154]: idle
+            - generic [ref=e155]: "Profiles: work, ops, research • Terminal: read-only"
+            - generic [ref=e156]: "Masuda voice: Masuda / ElevenLabs • RDD32PpZue0rvaKFOD60"
+            - generic [ref=e157]:
+              - button "Use ElevenLabs" [disabled] [ref=e659] [cursor=pointer]
+              - button "Use Hila Edge" [ref=e660] [cursor=pointer]
+            - generic [ref=e158]:
+              - generic [ref=e661]: command-center-local
+              - generic [ref=e662]: gateway-runtime-local
+              - generic [ref=e663]: sqlite
+              - generic [ref=e664]: github
+              - generic [ref=e665]: ~/.hermes
+              - generic [ref=e666]: gateway restart
+      - generic [ref=e159]:
+        - article [ref=e160]:
+          - generic [ref=e161]: Active processes
+          - generic [ref=e162]: "20"
+          - generic [ref=e163]:
+            - generic [ref=e164]: Hermes runtime
+            - generic [ref=e165]: running
+        - article [ref=e166]:
+          - generic [ref=e167]: Pending items
+          - generic [ref=e168]: "0"
+          - generic [ref=e169]:
+            - generic [ref=e170]: Need operator review
+            - generic [ref=e171]: 2 changes
+        - article [ref=e172]:
+          - generic [ref=e173]: Communication targets
+          - generic [ref=e174]: "10"
+          - generic [ref=e175]:
+            - generic [ref=e176]: Across lanes
+            - generic [ref=e177]: 4 healthy
+        - article [ref=e178]:
+          - generic [ref=e179]: Scheduled jobs
+          - generic [ref=e180]: "18"
+          - generic [ref=e181]:
+            - generic [ref=e182]: Due + fail
+            - generic [ref=e183]: 0 due · 0 failing
+      - generic [ref=e184]:
+        - generic [ref=e185]:
+          - generic [ref=e186]:
+            - heading "Section map" [level=2] [ref=e187]
+            - paragraph [ref=e188]: Jump to the next lane.
+          - generic [ref=e189]: Best next · Pending items
+        - generic [ref=e667]:
+          - article [ref=e668]:
+            - generic [ref=e669]:
+              - generic [ref=e670]: "01"
+              - generic [ref=e671]: Steady entry
+            - generic [ref=e672]:
+              - generic [ref=e673]: Recommended actions
+              - generic [ref=e674]: Start with the overview hero before opening deeper panels.
+            - generic [ref=e677]:
+              - generic [ref=e678]: load
+              - strong [ref=e679]: 18%
+            - button "Open overview" [ref=e682] [cursor=pointer]
+          - article [ref=e683]:
+            - generic [ref=e684]:
+              - generic [ref=e685]: "02"
+              - generic [ref=e686]: 0 attention item(s)
+            - generic [ref=e687]:
+              - generic [ref=e688]: Pending items
+              - generic [ref=e689]: My day is clear under the current filters.
+            - generic [ref=e692]:
+              - generic [ref=e693]: load
+              - strong [ref=e694]: 0%
+            - button "Open tasks" [ref=e696] [cursor=pointer]
+            - text: Best next
+          - article [ref=e697]:
+            - generic [ref=e698]:
+              - generic [ref=e699]: "03"
+              - generic [ref=e700]: 10 target(s)
+            - generic [ref=e701]:
+              - generic [ref=e702]: Communications
+              - generic [ref=e703]: "Active routed lanes: discord • telegram • whatsapp"
+            - generic [ref=e706]:
+              - generic [ref=e707]: load
+              - strong [ref=e708]: 50%
+            - button "Open comms" [ref=e711] [cursor=pointer]
+          - article [ref=e712]:
+            - generic [ref=e713]:
+              - generic [ref=e714]: "04"
+              - generic [ref=e715]: 20 live process(es)
+            - generic [ref=e716]:
+              - generic [ref=e717]: Runtime processes
+              - generic [ref=e718]: /Users/ailab/.hermes/hermes-agent/venv/bin/python3 /Users/ailab/.local/…
+            - generic [ref=e721]:
+              - generic [ref=e722]: load
+              - strong [ref=e723]: 34%
+            - button "Open processes" [ref=e726] [cursor=pointer]
+          - article [ref=e727]:
+            - generic [ref=e728]:
+              - generic [ref=e729]: "05"
+              - generic [ref=e730]: 0 failing • 0 logged
+            - generic [ref=e731]:
+              - generic [ref=e732]: Diagnostics
+              - generic [ref=e733]: 2 repo change(s) and telemetry charts are available for deeper review.
+            - generic [ref=e736]:
+              - generic [ref=e737]: load
+              - strong [ref=e738]: 0%
+            - button "Open diagnostics" [ref=e740] [cursor=pointer]
+      - generic [ref=e190]:
+        - generic [ref=e192]:
+          - heading "Operator program" [level=2] [ref=e193]
+          - paragraph [ref=e194]: Workflow lanes with timing and shortcuts.
+        - generic [ref=e741]:
+          - article [ref=e742]:
+            - generic [ref=e743]:
+              - generic [ref=e744]:
+                - img "Architecture / System Design" [ref=e745]
+                - generic [ref=e746]:
+                  - generic [ref=e747]: Astra Shell
+                  - generic [ref=e748]: Command center design
+                  - generic [ref=e749]: Operator surface architect
+              - generic [ref=e750]: Due soon
+            - generic [ref=e751]: second-brain-autonomous-improvement-sprint • 2h
+            - generic [ref=e752]:
+              - generic [ref=e753]:
+                - generic [ref=e754]: Due window
+                - strong [ref=e755]: 2h
+                - generic [ref=e756]: Closest visible scheduled pressure for this program.
+              - generic [ref=e757]:
+                - generic [ref=e758]: Last success
+                - strong [ref=e759]: No fresh success marker
+                - generic [ref=e760]: No recent success signal is currently leading this program.
+            - generic [ref=e761]:
+              - button "Inspect program" [ref=e762] [cursor=pointer]
+              - button "View overview" [ref=e763] [cursor=pointer]
+          - article [ref=e764]:
+            - generic [ref=e765]:
+              - generic [ref=e766]:
+                - img "Architecture / System Design" [ref=e767]
+                - generic [ref=e768]:
+                  - generic [ref=e769]: Relic Operator
+                  - generic [ref=e770]: Consulting morning update
+                  - generic [ref=e771]: Client operations coordinator
+              - generic [ref=e772]: Due soon
+            - generic [ref=e773]: second-brain-daily-improvement-recommendations • 17h
+            - generic [ref=e774]:
+              - generic [ref=e775]:
+                - generic [ref=e776]: Due window
+                - strong [ref=e777]: 17h
+                - generic [ref=e778]: Closest visible scheduled pressure for this program.
+              - generic [ref=e779]:
+                - generic [ref=e780]: Last success
+                - strong [ref=e781]: No fresh success marker
+                - generic [ref=e782]: No recent success signal is currently leading this program.
+            - generic [ref=e783]:
+              - button "Inspect program" [ref=e784] [cursor=pointer]
+              - button "View overview" [ref=e785] [cursor=pointer]
+          - article [ref=e786]:
+            - generic [ref=e787]:
+              - generic [ref=e788]:
+                - img "Architecture / System Design" [ref=e789]
+                - generic [ref=e790]:
+                  - generic [ref=e791]: Nova Brief
+                  - generic [ref=e792]: Daily brief assembly
+                  - generic [ref=e793]: Morning synthesis lead
+              - generic [ref=e794]: Due soon
+            - generic [ref=e795]: second-brain-daily-brief-telegram • 17h
+            - generic [ref=e796]:
+              - generic [ref=e797]:
+                - generic [ref=e798]: Due window
+                - strong [ref=e799]: 17h
+                - generic [ref=e800]: Closest visible scheduled pressure for this program.
+              - generic [ref=e801]:
+                - generic [ref=e802]: Last success
+                - strong [ref=e803]: No fresh success marker
+                - generic [ref=e804]: No recent success signal is currently leading this program.
+            - generic [ref=e805]:
+              - button "Inspect program" [ref=e806] [cursor=pointer]
+              - button "View overview" [ref=e807] [cursor=pointer]
+          - article [ref=e808]:
+            - generic [ref=e809]:
+              - generic [ref=e810]:
+                - img "Architecture / System Design" [ref=e811]
+                - generic [ref=e812]:
+                  - generic [ref=e813]: Sentinel Pulse
+                  - generic [ref=e814]: Health check alerting
+                  - generic [ref=e815]: System health guardian
+              - generic [ref=e816]: Due soon
+            - generic [ref=e817]: second-brain-health-check-system • 11h
+            - generic [ref=e818]:
+              - generic [ref=e819]:
+                - generic [ref=e820]: Due window
+                - strong [ref=e821]: 11h
+                - generic [ref=e822]: Closest visible scheduled pressure for this program.
+              - generic [ref=e823]:
+                - generic [ref=e824]: Last success
+                - strong [ref=e825]: No fresh success marker
+                - generic [ref=e826]: No recent success signal is currently leading this program.
+            - generic [ref=e827]:
+              - button "Inspect program" [ref=e828] [cursor=pointer]
+              - button "View overview" [ref=e829] [cursor=pointer]
+          - article [ref=e830]:
+            - generic [ref=e831]:
+              - generic [ref=e832]:
+                - img "Architecture / System Design" [ref=e833]
+                - generic [ref=e834]:
+                  - generic [ref=e835]: Atlas Review
+                  - generic [ref=e836]: Weekly brief assembly
+                  - generic [ref=e837]: Weekly pattern analyst
+              - generic [ref=e838]: Standing by
+            - generic [ref=e839]: No current action-plan or due-soon pressure for this workflow.
+            - generic [ref=e840]:
+              - generic [ref=e841]:
+                - generic [ref=e842]: Due window
+                - strong [ref=e843]: No near-term due window
+                - generic [ref=e844]: No immediate cron pressure is visible for this program.
+              - generic [ref=e845]:
+                - generic [ref=e846]: Last success
+                - strong [ref=e847]: No fresh success marker
+                - generic [ref=e848]: No recent success signal is currently leading this program.
+            - generic [ref=e849]:
+              - button "Inspect program" [ref=e850] [cursor=pointer]
+              - button "View overview" [ref=e851] [cursor=pointer]
+      - generic [ref=e195]:
+        - article [ref=e196]:
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - heading "Recommended actions" [level=2] [ref=e199]
+              - paragraph [ref=e200]: Top moves first.
+            - generic [ref=e201]: Updated Apr 29, 1:38 PM
+          - generic [ref=e203]:
+            - generic [ref=e852]:
+              - generic [ref=e855]: System steady
+              - generic [ref=e856]:
+                - generic [ref=e857]: No immediate action queued
+                - generic [ref=e858]: No blockers. Review next actions only.
+              - generic [ref=e859]:
+                - generic [ref=e860]: 0 priority
+                - generic [ref=e861]: 10 routes
+                - generic [ref=e862]: 4/4 healthy
+              - generic [ref=e864]:
+                - generic [ref=e865]: Operator load
+                - generic [ref=e866]: 0 attention
+                - generic [ref=e867]: 0 now • 0 next
+              - generic [ref=e869]:
+                - strong [ref=e870]: Clear operator lane
+                - generic [ref=e871]: No immediate priorities
+            - generic [ref=e204]:
+              - generic [ref=e208]:
+                - generic [ref=e209]: Next
+                - generic [ref=e872]: Nothing queued
+              - generic [ref=e211]:
+                - generic [ref=e212]: Later
+                - generic [ref=e873]: Nothing queued
+        - article [ref=e215]:
+          - generic [ref=e216]:
+            - generic [ref=e217]:
+              - heading "Health signals" [level=2] [ref=e218]
+              - paragraph [ref=e219]: Health at a glance.
+            - button "Show diagnostics" [ref=e220] [cursor=pointer]
+          - generic [ref=e874]:
+            - generic [ref=e875]:
+              - generic [ref=e876]: systems healthy
+              - generic [ref=e877]: 4/4
+              - generic "0 degraded platform(s)" [ref=e878]: All connected platforms healthy
+            - generic [ref=e879]:
+              - generic [ref=e880]: failures
+              - generic [ref=e881]: "0"
+              - generic "0 due • 0 failing" [ref=e882]
+          - generic [ref=e883]:
+            - generic [ref=e884]:
+              - generic [ref=e886]:
+                - generic [ref=e887]: Activity
+                - generic [ref=e888]: 20 recent event(s)
+              - img "sparkline" [ref=e890]
+            - generic [ref=e892]:
+              - generic [ref=e894]:
+                - generic [ref=e895]: Failures
+                - generic [ref=e896]: 0 recent failure(s)
+              - img "sparkline" [ref=e898]
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - generic [ref=e223]:
+                - generic [ref=e224]: Horizon
+                - generic [ref=e225]: Stable activity currently outweighs failure noise.
+              - generic [ref=e226]: Last 4h • 15m slots
+            - img "Horizon chart" [ref=e227]:
+              - generic [ref=e933]: start
+              - generic [ref=e934]: Last 4h • 15m slots
+              - generic [ref=e935]: now
+            - generic [ref=e936]:
+              - generic [ref=e937]:
+                - generic [ref=e938]: dominant lane
+                - generic [ref=e939]: Activity is dominating
+                - generic [ref=e940]: Stable activity currently outweighs failure noise.
+              - generic [ref=e941]:
+                - generic [ref=e942]: peak activity
+                - generic [ref=e943]: "4"
+                - generic [ref=e944]: Highest event count in one 15m slot.
+              - generic [ref=e945]:
+                - generic [ref=e946]: peak failures
+                - generic [ref=e947]: "0"
+                - generic [ref=e948]: Highest failure count in one 15m slot.
+            - generic [ref=e949]:
+              - generic [ref=e950]: Activity bars
+              - generic [ref=e952]: Failure bars
+              - strong [ref=e956]: Activity is dominating
+      - generic [ref=e228]:
+        - generic [ref=e229]:
+          - article [ref=e230]:
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - heading "My day" [level=2] [ref=e233]
+                - paragraph [ref=e234]: Pending items and next actions.
+              - button "View all" [ref=e235] [cursor=pointer]
+            - generic [ref=e958]:
+              - generic [ref=e959]: Calm task lane
+              - generic [ref=e961]: No pending items are competing for attention.
+              - generic [ref=e962]: The current filters are clear. Stay in the action-first lane, review the next curated move, or jump into communications and diagnostics only if you want a deeper sweep.
+              - generic [ref=e963]:
+                - button "Return to overview" [ref=e964] [cursor=pointer]
+                - button "Open communications" [ref=e965] [cursor=pointer]
+          - article [ref=e236]:
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - heading "System warnings and failures" [level=2] [ref=e239]
+                - paragraph [ref=e240]: Recent critical runtime signals.
+              - button "Collapse" [ref=e242] [cursor=pointer]
+            - 'button "errors.log n/a • unknown Traceback (most recent call last): Single recent event • Open evidence + runbook" [ref=e968] [cursor=pointer]':
+              - generic [ref=e969]:
+                - generic [ref=e970]: errors.log
+                - generic [ref=e971]: n/a • unknown
+              - generic [ref=e972]: "Traceback (most recent call last):"
+              - generic [ref=e973]: Single recent event • Open evidence + runbook
+          - article [ref=e243]:
+            - generic [ref=e244]:
+              - generic [ref=e245]:
+                - heading "Live Hermes processes" [level=2] [ref=e246]
+                - paragraph [ref=e247]: Current runtime processes.
+              - button "Collapse" [ref=e249] [cursor=pointer]
+            - table [ref=e976]:
+              - rowgroup [ref=e977]:
+                - row "Skill PID CPU Started Command Actions" [ref=e978]:
+                  - columnheader "Skill" [ref=e979]
+                  - columnheader "PID" [ref=e980]
+                  - columnheader "CPU" [ref=e981]
+                  - columnheader "Started" [ref=e982]
+                  - columnheader "Command" [ref=e983]
+                  - columnheader "Actions" [ref=e984]
+              - rowgroup [ref=e985]:
+                - row "Architecture / System Design Architecture / System Design 94507 2.6 Wed Apr 29 10:00:49 2026 /Users/ailab/.hermes/hermes-agent/venv/bin/python3 /Users/ailab/.local/bin/hermes —" [ref=e986]:
+                  - cell "Architecture / System Design Architecture / System Design" [ref=e987]:
+                    - generic [ref=e988]:
+                      - img "Architecture / System Design" [ref=e989]
+                      - generic [ref=e990]: Architecture / System Design
+                  - cell "94507" [ref=e991]:
+                    - generic [ref=e992]: "94507"
+                  - cell "2.6" [ref=e993]:
+                    - generic [ref=e994]: "2.6"
+                  - cell "Wed Apr 29 10:00:49 2026" [ref=e995]:
+                    - generic [ref=e996]: Wed Apr 29 10:00:49 2026
+                  - cell "/Users/ailab/.hermes/hermes-agent/venv/bin/python3 /Users/ailab/.local/bin/hermes" [ref=e997]:
+                    - generic "/Users/ailab/.hermes/hermes-agent/venv/bin/python3 /Users/ailab/.local/bin/hermes" [ref=e998]
+                  - cell "—" [ref=e999]
+                - row "Architecture / System Design Architecture / System Design 84741 2.4 Wed Apr 29 08:50:33 2026 /opt/homebrew/bin/node /Users/ailab/Hermes/command-center/server.mjs —" [ref=e1000]:
+                  - cell "Architecture / System Design Architecture / System Design" [ref=e1001]:
+                    - generic [ref=e1002]:
+                      - img "Architecture / System Design" [ref=e1003]
+                      - generic [ref=e1004]: Architecture / System Design
+                  - cell "84741" [ref=e1005]:
+                    - generic [ref=e1006]: "84741"
+                  - cell "2.4" [ref=e1007]:
+                    - generic [ref=e1008]: "2.4"
+                  - cell "Wed Apr 29 08:50:33 2026" [ref=e1009]:
+                    - generic [ref=e1010]: Wed Apr 29 08:50:33 2026
+                  - cell "/opt/homebrew/bin/node /Users/ailab/Hermes/command-center/server.mjs" [ref=e1011]:
+                    - generic "/opt/homebrew/bin/node /Users/ailab/Hermes/command-center/server.mjs" [ref=e1012]
+                  - cell "—" [ref=e1013]
+                - 'row "Finance / Analytics / Forecasting Finance / Analytics / Forecasting 24107 0.4 Wed Apr 29 12:09:16 2026 Cursor Helper (Plugin): extension-host (user) Hermes [1-1] —" [ref=e1014]':
+                  - cell "Finance / Analytics / Forecasting Finance / Analytics / Forecasting" [ref=e1015]:
+                    - generic [ref=e1016]:
+                      - img "Finance / Analytics / Forecasting" [ref=e1017]
+                      - generic [ref=e1018]: Finance / Analytics / Forecasting
+                  - cell "24107" [ref=e1019]:
+                    - generic [ref=e1020]: "24107"
+                  - cell "0.4" [ref=e1021]:
+                    - generic [ref=e1022]: "0.4"
+                  - cell "Wed Apr 29 12:09:16 2026" [ref=e1023]:
+                    - generic [ref=e1024]: Wed Apr 29 12:09:16 2026
+                  - 'cell "Cursor Helper (Plugin): extension-host (user) Hermes [1-1]" [ref=e1025]':
+                    - 'generic "Cursor Helper (Plugin): extension-host (user) Hermes [1-1]" [ref=e1026]'
+                  - cell "—" [ref=e1027]
+                - 'row "Finance / Analytics / Forecasting Finance / Analytics / Forecasting 24118 0.4 Wed Apr 29 12:09:16 2026 Cursor Helper (Plugin): extension-host (retrieval) Hermes [1-2] —" [ref=e1028]':
+                  - cell "Finance / Analytics / Forecasting Finance / Analytics / Forecasting" [ref=e1029]:
+                    - generic [ref=e1030]:
+                      - img "Finance / Analytics / Forecasting" [ref=e1031]
+                      - generic [ref=e1032]: Finance / Analytics / Forecasting
+                  - cell "24118" [ref=e1033]:
+                    - generic [ref=e1034]: "24118"
+                  - cell "0.4" [ref=e1035]:
+                    - generic [ref=e1036]: "0.4"
+                  - cell "Wed Apr 29 12:09:16 2026" [ref=e1037]:
+                    - generic [ref=e1038]: Wed Apr 29 12:09:16 2026
+                  - 'cell "Cursor Helper (Plugin): extension-host (retrieval) Hermes [1-2]" [ref=e1039]':
+                    - 'generic "Cursor Helper (Plugin): extension-host (retrieval) Hermes [1-2]" [ref=e1040]'
+                  - cell "—" [ref=e1041]
+                - 'row "Finance / Analytics / Forecasting Finance / Analytics / Forecasting 24119 0.4 Wed Apr 29 12:09:16 2026 Cursor Helper (Plugin): extension-host (always-local) Hermes [1-3] —" [ref=e1042]':
+                  - cell "Finance / Analytics / Forecasting Finance / Analytics / Forecasting" [ref=e1043]:
+                    - generic [ref=e1044]:
+                      - img "Finance / Analytics / Forecasting" [ref=e1045]
+                      - generic [ref=e1046]: Finance / Analytics / Forecasting
+                  - cell "24119" [ref=e1047]:
+                    - generic [ref=e1048]: "24119"
+                  - cell "0.4" [ref=e1049]:
+                    - generic [ref=e1050]: "0.4"
+                  - cell "Wed Apr 29 12:09:16 2026" [ref=e1051]:
+                    - generic [ref=e1052]: Wed Apr 29 12:09:16 2026
+                  - 'cell "Cursor Helper (Plugin): extension-host (always-local) Hermes [1-3]" [ref=e1053]':
+                    - 'generic "Cursor Helper (Plugin): extension-host (always-local) Hermes [1-3]" [ref=e1054]'
+                  - cell "—" [ref=e1055]
+          - article [ref=e250]:
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - heading "Worktrees" [level=2] [ref=e253]
+                - paragraph [ref=e254]: Implementation sandboxes and readiness.
+              - button "Collapse" [ref=e256] [cursor=pointer]
+            - generic [ref=e1058]: No active worktrees tracked.
+          - article [ref=e257]:
+            - generic [ref=e258]:
+              - generic [ref=e259]:
+                - heading "Approval-gated next actions" [level=2] [ref=e260]
+                - paragraph [ref=e261]: High-risk work waiting for approval.
+              - button "Collapse" [ref=e263] [cursor=pointer]
+            - generic [ref=e1061]: No approval-gated actions are waiting.
+          - article [ref=e264]:
+            - generic [ref=e265]:
+              - generic [ref=e266]:
+                - heading "Recent operation traces" [level=2] [ref=e267]
+                - paragraph [ref=e268]: Artifacts for work, verification, and audit.
+              - button "Collapse" [ref=e270] [cursor=pointer]
+            - generic [ref=e1063]:
+              - button "trace archived Paperclip-inspired Hermes command-center port paperclip-pattern-port" [ref=e1064] [cursor=pointer]:
+                - generic [ref=e1065]:
+                  - generic [ref=e1066]: trace
+                  - generic [ref=e1067]: archived
+                - generic [ref=e1068]: Paperclip-inspired Hermes command-center port
+                - generic [ref=e1069]: paperclip-pattern-port
+              - button "trace archived Export snapshot JSON export_snapshot_json" [ref=e1070] [cursor=pointer]:
+                - generic [ref=e1071]:
+                  - generic [ref=e1072]: trace
+                  - generic [ref=e1073]: archived
+                - generic [ref=e1074]: Export snapshot JSON
+                - generic [ref=e1075]: export_snapshot_json
+              - button "trace archived Export snapshot Markdown export_snapshot_md" [ref=e1076] [cursor=pointer]:
+                - generic [ref=e1077]:
+                  - generic [ref=e1078]: trace
+                  - generic [ref=e1079]: archived
+                - generic [ref=e1080]: Export snapshot Markdown
+                - generic [ref=e1081]: export_snapshot_md
+              - button "trace archived Telegram operator lane check messaging-telegram-target" [ref=e1082] [cursor=pointer]:
+                - generic [ref=e1083]:
+                  - generic [ref=e1084]: trace
+                  - generic [ref=e1085]: archived
+                - generic [ref=e1086]: Telegram operator lane check
+                - generic [ref=e1087]: messaging-telegram-target
+              - button "trace archived Refresh abtop snapshot refresh_abtop_snapshot" [ref=e1088] [cursor=pointer]:
+                - generic [ref=e1089]:
+                  - generic [ref=e1090]: trace
+                  - generic [ref=e1091]: archived
+                - generic [ref=e1092]: Refresh abtop snapshot
+                - generic [ref=e1093]: refresh_abtop_snapshot
+              - button "trace archived Refresh llmfit recommendations refresh_llmfit_recommendations" [ref=e1094] [cursor=pointer]:
+                - generic [ref=e1095]:
+                  - generic [ref=e1096]: trace
+                  - generic [ref=e1097]: archived
+                - generic [ref=e1098]: Refresh llmfit recommendations
+                - generic [ref=e1099]: refresh_llmfit_recommendations
+          - article [ref=e271]:
+            - generic [ref=e272]:
+              - generic [ref=e273]:
+                - heading "Terminal pane" [level=2] [ref=e274]
+                - paragraph [ref=e275]: Curated local terminal sessions.
+              - generic [ref=e276]:
+                - generic [ref=e277]: Read-only default
+                - button "Collapse" [ref=e278] [cursor=pointer]
+            - generic [ref=e279]:
+              - generic [ref=e1100]:
+                - generic [ref=e1101]:
+                  - generic [ref=e1102]: Terminal status
+                  - generic [ref=e1103]: Read-only terminal sessions are available
+                - generic [ref=e1104]: good
+              - generic [ref=e1105]:
+                - button "Command center log tail Read-only curated session read-only" [ref=e1106] [cursor=pointer]:
+                  - generic [ref=e1107]:
+                    - generic [ref=e1108]: Command center log tail
+                    - generic [ref=e1109]: Read-only curated session
+                  - generic [ref=e1110]: read-only
+                - button "Hermes error log tail Read-only curated session read-only" [ref=e1111] [cursor=pointer]:
+                  - generic [ref=e1112]:
+                    - generic [ref=e1113]: Hermes error log tail
+                    - generic [ref=e1114]: Read-only curated session
+                  - generic [ref=e1115]: read-only
+                - button "Runtime process watch Read-only curated session read-only" [ref=e1116] [cursor=pointer]:
+                  - generic [ref=e1117]:
+                    - generic [ref=e1118]: Runtime process watch
+                    - generic [ref=e1119]: Read-only curated session
+                  - generic [ref=e1120]: read-only
+              - generic [ref=e280]:
+                - button "Open selected session" [ref=e281] [cursor=pointer]
+                - button "Disconnect" [disabled] [ref=e282] [cursor=pointer]
+                - generic [ref=e283]:
+                  - text: Search terminal
+                  - searchbox "Search terminal" [ref=e284]
+                - button "Find next" [ref=e285] [cursor=pointer]
+              - generic "Terminal pane"
+              - generic [ref=e286]: Interactive repo-shell is disabled. Only curated read-only sessions are exposed by default.
+        - generic [ref=e287]:
+          - article [ref=e288]:
+            - generic [ref=e289]:
+              - generic [ref=e290]:
+                - heading "Hermes agents" [level=2] [ref=e291]
+                - paragraph [ref=e292]: Top skills, posture, and load.
+              - button "Collapse" [ref=e294] [cursor=pointer]
+            - generic [ref=e295]:
+              - generic [ref=e296]:
+                - generic [ref=e297]:
+                  - generic [ref=e298]: Load distribution
+                  - generic [ref=e299]: 96% avg load
+                - img "Hermes agent load chart" [ref=e300]:
+                  - generic [ref=e1123]: 0%
+                  - generic [ref=e1125]: 50%
+                  - generic [ref=e1127]: 100%
+                  - generic [ref=e1128]: AS
+                  - generic [ref=e1131]: 96%
+                  - generic [ref=e1132]: RO
+                  - generic [ref=e1135]: 96%
+                  - generic [ref=e1136]: NB
+                  - generic [ref=e1139]: 96%
+                  - generic [ref=e1140]: SP
+                  - generic [ref=e1143]: 96%
+              - generic [ref=e1144]:
+                - button "Architecture / System Design Astra Shell Command center design Architecture / System Design 96%" [ref=e1145] [cursor=pointer]:
+                  - generic [ref=e1146]:
+                    - img "Architecture / System Design" [ref=e1147]
+                    - generic [ref=e1148]:
+                      - generic [ref=e1149]: Astra Shell
+                      - generic [ref=e1150]: Command center design
+                  - generic [ref=e1154]:
+                    - generic [ref=e1155]: Architecture / System Design
+                    - generic [ref=e1156]: 96%
+                - button "Architecture / System Design Relic Operator Consulting morning update Architecture / System Design 96%" [ref=e1157] [cursor=pointer]:
+                  - generic [ref=e1158]:
+                    - img "Architecture / System Design" [ref=e1159]
+                    - generic [ref=e1160]:
+                      - generic [ref=e1161]: Relic Operator
+                      - generic [ref=e1162]: Consulting morning update
+                  - generic [ref=e1166]:
+                    - generic [ref=e1167]: Architecture / System Design
+                    - generic [ref=e1168]: 96%
+                - button "Architecture / System Design Nova Brief Daily brief assembly Architecture / System Design 96%" [ref=e1169] [cursor=pointer]:
+                  - generic [ref=e1170]:
+                    - img "Architecture / System Design" [ref=e1171]
+                    - generic [ref=e1172]:
+                      - generic [ref=e1173]: Nova Brief
+                      - generic [ref=e1174]: Daily brief assembly
+                  - generic [ref=e1178]:
+                    - generic [ref=e1179]: Architecture / System Design
+                    - generic [ref=e1180]: 96%
+                - button "Architecture / System Design Sentinel Pulse Health check alerting Architecture / System Design 96%" [ref=e1181] [cursor=pointer]:
+                  - generic [ref=e1182]:
+                    - img "Architecture / System Design" [ref=e1183]
+                    - generic [ref=e1184]:
+                      - generic [ref=e1185]: Sentinel Pulse
+                      - generic [ref=e1186]: Health check alerting
+                  - generic [ref=e1190]:
+                    - generic [ref=e1191]: Architecture / System Design
+                    - generic [ref=e1192]: 96%
+          - article [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e303]:
+                - heading "Recent communications" [level=2] [ref=e304]
+                - paragraph [ref=e305]: Routes, delivery lanes, and recent activity.
+              - button "Collapse" [ref=e307] [cursor=pointer]
+            - generic [ref=e308]:
+              - generic [ref=e309]:
+                - generic [ref=e310]:
+                  - generic [ref=e311]: Route mix
+                  - generic [ref=e312]: 10 live routes • updated just now
+                - img "Communications route mix chart" [ref=e313]:
+                  - generic [ref=e1195]: "8"
+                  - generic [ref=e1196]: discord
+                  - generic [ref=e1198]: "1"
+                  - generic [ref=e1199]: telegram
+                  - generic [ref=e1201]: "1"
+                  - generic [ref=e1202]: whatsapp
+                - generic [ref=e1203]:
+                  - generic [ref=e1204]:
+                    - strong [ref=e1205]: "8"
+                    - text: discord
+                  - generic [ref=e1206]:
+                    - strong [ref=e1207]: "1"
+                    - text: telegram
+                  - generic [ref=e1208]:
+                    - strong [ref=e1209]: "1"
+                    - text: whatsapp
+              - generic [ref=e1210]:
+                - 'button "AS hermes-runtime-continuity-hooks Apr 29, 1:30 PM • 8m ago added live continuity capsule runtime wiring in `/Users/ailab/.hermes/h…" [ref=e1211] [cursor=pointer]':
+                  - generic [ref=e1212]:
+                    - generic [ref=e1213]: AS
+                    - generic [ref=e1214]:
+                      - generic [ref=e1215]: hermes-runtime-continuity-hooks
+                      - generic [ref=e1216]: Apr 29, 1:30 PM • 8m ago
+                  - generic [ref=e1217]: "added live continuity capsule runtime wiring in `/Users/ailab/.hermes/h…"
+                - 'button "NB continuity-capsule-prototype Apr 29, 1:13 PM • 25m ago implemented `scripts/continuity_capsule.py`, added `tests/test_continui…" [ref=e1218] [cursor=pointer]':
+                  - generic [ref=e1219]:
+                    - generic [ref=e1220]: NB
+                    - generic [ref=e1221]:
+                      - generic [ref=e1222]: continuity-capsule-prototype
+                      - generic [ref=e1223]: Apr 29, 1:13 PM • 25m ago
+                  - generic [ref=e1224]: "implemented `scripts/continuity_capsule.py`, added `tests/test_continui…"
+          - article [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - heading "Operator feedback loop" [level=2] [ref=e317]
+                - paragraph [ref=e318]: Action status and latest activity.
+              - button "Collapse" [ref=e320] [cursor=pointer]
+            - generic [ref=e321]:
+              - generic [ref=e322]:
+                - generic [ref=e1225]:
+                  - generic [ref=e1226]: ready
+                  - generic [ref=e1227]: warn
+                - generic [ref=e1228]: ready
+                - generic [ref=e1229]: Dashboard action lane is idle.
+              - generic [ref=e323]:
+                - generic [ref=e324]: Recent operations
+                - generic [ref=e1231]: No operator-triggered actions yet.
+              - generic [ref=e325]:
+                - generic [ref=e326]: Live activity strip
+                - generic [ref=e1232]:
+                  - generic [ref=e1233]:
+                    - generic [ref=e1234]:
+                      - generic [ref=e1235]: work
+                      - generic [ref=e1236]: Apr 29, 1:30 PM
+                    - generic [ref=e1237]:
+                      - img "Finance / Analytics / Forecasting" [ref=e1238]
+                      - generic [ref=e1239]:
+                        - generic [ref=e1240]: hermes-runtime-continuity-hooks
+                        - generic [ref=e1241]: "added live continuity capsule runtime wiring in `/Users/ailab/.hermes/hermes-agent` via `…"
+                  - generic [ref=e1242]:
+                    - generic [ref=e1243]:
+                      - generic [ref=e1244]: work
+                      - generic [ref=e1245]: Apr 29, 1:13 PM
+                    - generic [ref=e1246]:
+                      - img "GitHub Analyst" [ref=e1247]
+                      - generic [ref=e1248]:
+                        - generic [ref=e1249]: continuity-capsule-prototype
+                        - generic [ref=e1250]: "implemented `scripts/continuity_capsule.py`, added `tests/test_continuity_capsule.py`, cr…"
+                  - generic [ref=e1251]:
+                    - generic [ref=e1252]:
+                      - generic [ref=e1253]: research
+                      - generic [ref=e1254]: Apr 29, 12:59 PM
+                    - generic [ref=e1255]:
+                      - img "Finance / Analytics / Forecasting" [ref=e1256]
+                      - generic [ref=e1257]:
+                        - generic [ref=e1258]: context-continuity-architecture
+                        - generic [ref=e1259]: "researched Hermes continuity/reset surfaces, wrote the architecture spec `docs/specs/2026…"
+                  - generic [ref=e1260]:
+                    - generic [ref=e1261]:
+                      - generic [ref=e1262]: work
+                      - generic [ref=e1263]: Apr 29, 12:40 PM
+                    - generic [ref=e1264]:
+                      - img "GitHub Analyst" [ref=e1265]
+                      - generic [ref=e1266]:
+                        - generic [ref=e1267]: repo-commit-prep-2
+                        - generic [ref=e1268]: prepared the current Hermes changeset for commit/push after repo-boundary verification, i…
+          - article [ref=e327]:
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - heading "Snapshot exports" [level=2] [ref=e330]
+                - paragraph [ref=e331]: Save the current state.
+              - button "Collapse" [ref=e333] [cursor=pointer]
+            - generic [ref=e1271]:
+              - generic [ref=e1272]:
+                - generic [ref=e1273]: Local only
+                - generic [ref=e1274]: JSON / Markdown • just now
+              - heading "Export current dashboard snapshot" [level=3] [ref=e1275]
+              - generic [ref=e1276]: Write the current state to disk for review without leaving the local environment.
+              - generic [ref=e1277]:
+                - button "Export JSON" [ref=e1278] [cursor=pointer]
+                - button "Export Markdown" [ref=e1279] [cursor=pointer]

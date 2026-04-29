@@ -366,6 +366,27 @@ class TestSendVoiceReply:
     def runner(self, tmp_path):
         return _make_runner(tmp_path)
 
+    def test_strip_synthetic_annotations_for_tts_removes_sticker_and_media_notes(self):
+        from gateway.run import _strip_synthetic_annotations_for_tts
+
+        text = (
+            'כן אמא [The user sent a sticker 😀 from "MyPack"~ It shows: "A cat waving" (=^.w.^=)] '
+            'אני פה.\n[User sent an image: https://example.com/cat.jpg]'
+        )
+
+        cleaned = _strip_synthetic_annotations_for_tts(text)
+
+        assert cleaned == "כן אמא אני פה."
+
+    def test_strip_synthetic_annotations_for_tts_keeps_normal_brackets(self):
+        from gateway.run import _strip_synthetic_annotations_for_tts
+
+        text = "זה בסדר להגיד [מחר] בלי למחוק את זה"
+
+        cleaned = _strip_synthetic_annotations_for_tts(text)
+
+        assert cleaned == text
+
     @pytest.mark.asyncio
     async def test_calls_tts_and_send_voice(self, runner):
         mock_adapter = AsyncMock()
@@ -385,6 +406,28 @@ class TestSendVoiceReply:
         mock_adapter.send_voice.assert_called_once()
         call_args = mock_adapter.send_voice.call_args
         assert call_args.kwargs.get("chat_id") == "123"
+
+    @pytest.mark.asyncio
+    async def test_send_voice_reply_strips_synthetic_annotations_before_tts(self, runner):
+        mock_adapter = AsyncMock()
+        mock_adapter.send_voice = AsyncMock()
+        event = _make_event()
+        runner.adapters[event.source.platform] = mock_adapter
+        tts_result = json.dumps({"success": True, "file_path": "/tmp/test.ogg"})
+        response = (
+            'כן אמא [The user sent an animated sticker 😀~ I can\'t see animated ones yet, but the emoji suggests: 😀] '
+            'אני איתך'
+        )
+
+        with patch("tools.tts_tool.text_to_speech_tool", return_value=tts_result) as mock_tts, \
+             patch("tools.tts_tool._strip_markdown_for_tts", side_effect=lambda t: t), \
+             patch("os.path.isfile", return_value=True), \
+             patch("os.unlink"), \
+             patch("os.makedirs"):
+            await runner._send_voice_reply(event, response)
+
+        assert mock_tts.call_args.kwargs["text"] == "כן אמא אני איתך"
+        mock_adapter.send_voice.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_empty_text_after_strip_skips(self, runner):

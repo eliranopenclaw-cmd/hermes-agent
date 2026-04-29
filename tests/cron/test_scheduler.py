@@ -550,6 +550,52 @@ class TestDeliverResultWrapping:
         assert "MEDIA:" not in text_sent
         assert "Report" in text_sent
 
+    def test_live_telegram_delivery_adds_quick_approval_button_metadata(self):
+        """Telegram cron deliveries with a Reply directive should attach button metadata."""
+        from gateway.config import Platform
+        from concurrent.futures import Future
+
+        adapter = AsyncMock()
+        adapter.send.return_value = MagicMock(success=True)
+
+        pconfig = MagicMock()
+        pconfig.enabled = True
+        mock_cfg = MagicMock()
+        mock_cfg.platforms = {Platform.TELEGRAM: pconfig}
+
+        loop = MagicMock()
+        loop.is_running.return_value = True
+
+        def fake_run_coro(coro, _loop):
+            future = Future()
+            future.set_result(MagicMock(success=True))
+            coro.close()
+            return future
+
+        job = {
+            "id": "plan-job",
+            "deliver": "origin",
+            "origin": {"platform": "telegram", "chat_id": "555"},
+        }
+
+        with patch("gateway.config.load_gateway_config", return_value=mock_cfg), \
+             patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}), \
+             patch("asyncio.run_coroutine_threadsafe", side_effect=fake_run_coro):
+            _deliver_result(
+                job,
+                "# Daily Execution Recommendation\n\nReply in Telegram:\nReply: APPROVE EXECUTE TODAY\n\nEXECUTION STATUS: awaiting operator approval",
+                adapters={Platform.TELEGRAM: adapter},
+                loop=loop,
+            )
+
+        adapter.send.assert_called_once()
+        text_sent = adapter.send.call_args[0][1]
+        metadata_sent = adapter.send.call_args[1]["metadata"]
+        assert "Reply in Telegram:" not in text_sent
+        assert "Reply: APPROVE EXECUTE TODAY" not in text_sent
+        assert metadata_sent["quick_reply_text"] == "APPROVE EXECUTE TODAY"
+        assert metadata_sent["quick_reply_label"] == "✅ Approve Execute Today"
+
     def test_no_mirror_to_session_call(self):
         """Cron deliveries should NOT mirror into the gateway session."""
         from gateway.config import Platform

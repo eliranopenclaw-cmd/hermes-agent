@@ -1,0 +1,292 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - button "Dashboard" [ref=e6] [cursor=pointer]: ◫
+        - button "Tasks" [ref=e7] [cursor=pointer]: ☰
+        - button "Communications" [ref=e8] [cursor=pointer]: ✉
+        - button "Processes" [ref=e9] [cursor=pointer]: ⌘
+        - button "Pipeline" [ref=e11] [cursor=pointer]: ▥
+        - button "Diagnostics" [ref=e12] [cursor=pointer]: ◌
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - img "Hermes logo" [ref=e15]
+          - generic [ref=e16]:
+            - generic [ref=e17]: Hermes
+            - generic [ref=e18]: Operator cockpit
+            - generic [ref=e19]: Second Brain
+        - generic [ref=e20]:
+          - text: ⌕
+          - generic [ref=e21]: Search signals, routes, jobs
+        - generic [ref=e22]:
+          - generic [ref=e23]: Workspace
+          - button "Dashboard" [ref=e24] [cursor=pointer]:
+            - generic [ref=e25]: Dashboard
+          - button "Tasks" [ref=e26] [cursor=pointer]:
+            - generic [ref=e27]: Tasks
+          - button "Comms" [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]: Comms
+          - button "Processes" [ref=e30] [cursor=pointer]:
+            - generic [ref=e31]: Processes
+        - generic [ref=e32]:
+          - generic [ref=e33]: Status
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - generic [ref=e36]: Gateway
+              - strong [ref=e37]: "--"
+            - generic [ref=e38]:
+              - generic [ref=e39]: Net
+              - strong [ref=e40]: "--"
+            - generic [ref=e41]:
+              - generic [ref=e42]: Alerts
+              - strong [ref=e43]: "--"
+        - generic [ref=e44]:
+          - generic [ref=e45]: Focus
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: Queue
+              - strong [ref=e49]: "--"
+            - generic [ref=e50]:
+              - generic [ref=e51]: AI
+              - strong [ref=e52]: "--"
+            - generic [ref=e53]:
+              - generic [ref=e54]: Models
+              - strong [ref=e55]: "--"
+        - generic [ref=e57]: Best next
+  - main [ref=e59]:
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - heading "Dashboard" [level=1] [ref=e63]
+          - paragraph [ref=e64]: Track ops, comms, failures, and next work.
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - text: ⌕
+            - searchbox "⌕" [ref=e67]
+          - combobox [ref=e69]:
+            - option "All severity" [selected]
+            - option "High"
+            - option "Medium"
+            - option "Low"
+          - button "Compact off" [ref=e70] [cursor=pointer]
+          - button "Rail off" [ref=e71] [cursor=pointer]
+          - button "Refresh now" [ref=e72] [cursor=pointer]
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]: Sticky triage
+          - generic [ref=e77]: Operator lane steady
+        - generic [ref=e78]: Live
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]: Operator focus
+          - heading "Above-the-fold triage" [level=2] [ref=e83]
+          - paragraph [ref=e84]: Fastest current scan.
+        - generic [ref=e85]: Triage posture
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e89]: Operator brief
+          - heading "Workflow brief" [level=2] [ref=e90]
+          - paragraph [ref=e91]: Priority workflow scan.
+        - generic [ref=e92]: Workflow signal
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - generic [ref=e97]: Task flow
+            - heading "Operator task pipeline" [level=2] [ref=e98]
+            - paragraph [ref=e99]: Board view of queue, work, review, blockers, and done.
+          - generic [ref=e100]:
+            - button "Open tasks" [ref=e101] [cursor=pointer]
+            - button "Review queue" [ref=e102] [cursor=pointer]
+        - generic [ref=e104]: Pipeline pressure summary.
+        - generic [ref=e105]:
+          - img "Operator task pipeline board"
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - heading "Quick actions" [level=2] [ref=e109]
+            - paragraph [ref=e110]: Fast shortcuts and one workload chart.
+            - generic [ref=e111]: ⌘K / Ctrl+K focus command palette • ↑/↓ move • Enter opens • 1–5 launch visible actions • Curated operations only.
+          - generic [ref=e112]:
+            - text: ⌘K
+            - searchbox "⌘K" [ref=e113]
+        - generic [ref=e115]:
+          - generic [ref=e116]:
+            - generic [ref=e117]: Action load
+            - generic [ref=e118]: "--"
+          - img "Action lane chart" [ref=e119]
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - heading "Operator workspace" [level=2] [ref=e123]
+            - paragraph [ref=e124]: Pin one path and keep one local note.
+          - generic [ref=e125]:
+            - button "Pin best next" [ref=e126] [cursor=pointer]
+            - button "Clear workspace" [ref=e127] [cursor=pointer]
+        - generic [ref=e128]:
+          - article [ref=e129]:
+            - generic [ref=e130]: Pinned path
+            - generic [ref=e131]: No pinned path yet
+            - generic [ref=e132]: Pin the current best next destination or another operator lane for quick return.
+          - article [ref=e134]:
+            - generic [ref=e135]: Operator note
+            - generic [ref=e136]: Local note.
+            - textbox "Local note." [ref=e137]:
+              - /placeholder: Write a local note...
+            - generic [ref=e138]:
+              - button "Save note" [ref=e139] [cursor=pointer]
+              - button "Clear note" [ref=e140] [cursor=pointer]
+          - article [ref=e141]:
+            - generic [ref=e142]: Operator settings
+            - generic [ref=e143]: idle
+            - generic [ref=e144]: Routing, MCP, profile, safety.
+      - generic [ref=e146]:
+        - article [ref=e147]:
+          - generic [ref=e148]: Active processes
+          - generic [ref=e149]: "0"
+          - generic [ref=e150]:
+            - generic [ref=e151]: Hermes runtime
+            - generic [ref=e152]: "--"
+        - article [ref=e153]:
+          - generic [ref=e154]: Pending items
+          - generic [ref=e155]: "0"
+          - generic [ref=e156]:
+            - generic [ref=e157]: Need operator review
+            - generic [ref=e158]: "--"
+        - article [ref=e159]:
+          - generic [ref=e160]: Communication targets
+          - generic [ref=e161]: "0"
+          - generic [ref=e162]:
+            - generic [ref=e163]: Across lanes
+            - generic [ref=e164]: "--"
+        - article [ref=e165]:
+          - generic [ref=e166]: Scheduled jobs
+          - generic [ref=e167]: "0"
+          - generic [ref=e168]:
+            - generic [ref=e169]: Due + fail
+            - generic [ref=e170]: "--"
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - heading "Section map" [level=2] [ref=e174]
+          - paragraph [ref=e175]: Jump to the next lane.
+        - generic [ref=e176]: Scan order
+      - generic [ref=e179]:
+        - heading "Operator program" [level=2] [ref=e180]
+        - paragraph [ref=e181]: Workflow lanes with timing and shortcuts.
+      - generic [ref=e182]:
+        - article [ref=e183]:
+          - generic [ref=e184]:
+            - generic [ref=e185]:
+              - heading "Recommended actions" [level=2] [ref=e186]
+              - paragraph [ref=e187]: Top moves first.
+            - generic [ref=e188]: Live
+          - generic [ref=e191]:
+            - generic [ref=e193]: Now
+            - generic [ref=e196]: Next
+            - generic [ref=e199]: Later
+        - article [ref=e202]:
+          - generic [ref=e203]:
+            - generic [ref=e204]:
+              - heading "Health signals" [level=2] [ref=e205]
+              - paragraph [ref=e206]: Health at a glance.
+            - button "Show diagnostics" [ref=e207] [cursor=pointer]
+          - generic [ref=e208]:
+            - generic [ref=e209]:
+              - generic [ref=e210]:
+                - generic [ref=e211]: Horizon
+                - generic [ref=e212]: Recent activity and failures.
+              - generic [ref=e213]: Last 4h • 15m slots
+            - img "Horizon chart" [ref=e214]
+      - generic [ref=e215]:
+        - generic [ref=e216]:
+          - article [ref=e217]:
+            - generic [ref=e218]:
+              - generic [ref=e219]:
+                - heading "My day" [level=2] [ref=e220]
+                - paragraph [ref=e221]: Pending items and next actions.
+              - button "View all" [ref=e222] [cursor=pointer]
+          - article [ref=e223]:
+            - generic [ref=e224]:
+              - generic [ref=e225]:
+                - heading "System warnings and failures" [level=2] [ref=e226]
+                - paragraph [ref=e227]: Recent critical runtime signals.
+              - button "Collapse" [ref=e229] [cursor=pointer]
+          - article [ref=e230]:
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - heading "Live Hermes processes" [level=2] [ref=e233]
+                - paragraph [ref=e234]: Current runtime processes.
+              - button "Collapse" [ref=e236] [cursor=pointer]
+          - article [ref=e237]:
+            - generic [ref=e238]:
+              - generic [ref=e239]:
+                - heading "Worktrees" [level=2] [ref=e240]
+                - paragraph [ref=e241]: Implementation sandboxes and readiness.
+              - button "Collapse" [ref=e243] [cursor=pointer]
+          - article [ref=e244]:
+            - generic [ref=e245]:
+              - generic [ref=e246]:
+                - heading "Approval-gated next actions" [level=2] [ref=e247]
+                - paragraph [ref=e248]: High-risk work waiting for approval.
+              - button "Collapse" [ref=e250] [cursor=pointer]
+          - article [ref=e251]:
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - heading "Recent operation traces" [level=2] [ref=e254]
+                - paragraph [ref=e255]: Artifacts for work, verification, and audit.
+              - button "Collapse" [ref=e257] [cursor=pointer]
+          - article [ref=e258]:
+            - generic [ref=e259]:
+              - generic [ref=e260]:
+                - heading "Terminal pane" [level=2] [ref=e261]
+                - paragraph [ref=e262]: Curated local terminal sessions.
+              - generic [ref=e263]:
+                - generic [ref=e264]: Terminal
+                - button "Collapse" [ref=e265] [cursor=pointer]
+            - generic [ref=e266]:
+              - generic [ref=e267]:
+                - button "Open selected session" [ref=e268] [cursor=pointer]
+                - button "Disconnect" [ref=e269] [cursor=pointer]
+                - generic [ref=e270]:
+                  - text: Search terminal
+                  - searchbox "Search terminal" [ref=e271]
+                - button "Find next" [ref=e272] [cursor=pointer]
+              - generic "Terminal pane"
+              - generic [ref=e273]: Local-only terminal.
+        - generic [ref=e274]:
+          - article [ref=e275]:
+            - generic [ref=e276]:
+              - generic [ref=e277]:
+                - heading "Hermes agents" [level=2] [ref=e278]
+                - paragraph [ref=e279]: Top skills, posture, and load.
+              - button "Collapse" [ref=e281] [cursor=pointer]
+            - generic [ref=e283]:
+              - generic [ref=e284]:
+                - generic [ref=e285]: Load distribution
+                - generic [ref=e286]: "--"
+              - img "Hermes agent load chart" [ref=e287]
+          - article [ref=e288]:
+            - generic [ref=e289]:
+              - generic [ref=e290]:
+                - heading "Recent communications" [level=2] [ref=e291]
+                - paragraph [ref=e292]: Routes, delivery lanes, and recent activity.
+              - button "Collapse" [ref=e294] [cursor=pointer]
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - generic [ref=e298]: Route mix
+                - generic [ref=e299]: "--"
+              - img "Communications route mix chart" [ref=e300]
+          - article [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e303]:
+                - heading "Operator feedback loop" [level=2] [ref=e304]
+                - paragraph [ref=e305]: Action status and latest activity.
+              - button "Collapse" [ref=e307] [cursor=pointer]
+            - generic [ref=e308]:
+              - generic [ref=e311]: Recent operations
+              - generic [ref=e313]: Live activity strip
+          - article [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - heading "Snapshot exports" [level=2] [ref=e317]
+                - paragraph [ref=e318]: Save the current state.
+              - button "Collapse" [ref=e320] [cursor=pointer]

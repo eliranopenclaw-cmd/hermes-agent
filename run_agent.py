@@ -43,6 +43,21 @@ import fire
 from datetime import datetime
 from pathlib import Path
 
+
+def _latest_user_text_from_messages(messages: list[dict[str, Any]]) -> str:
+    for msg in reversed(messages or []):
+        if msg.get("role") != "user":
+            continue
+        content = msg.get("content")
+        if isinstance(content, str) and content.strip():
+            return content.strip()
+        if isinstance(content, list):
+            parts = [str(item.get("text") or "").strip() for item in content if isinstance(item, dict)]
+            joined = "\n".join(part for part in parts if part).strip()
+            if joined:
+                return joined
+    return ""
+
 from hermes_constants import get_hermes_home
 
 # Load .env from ~/.hermes/.env first, then project root as dev fallback.
@@ -74,6 +89,7 @@ from tools.terminal_tool import cleanup_vm, get_active_env, is_persistent_env
 from tools.tool_result_storage import maybe_persist_tool_result, enforce_turn_budget
 from tools.interrupt import set_interrupt as _set_interrupt
 from tools.browser_tool import cleanup_browser
+from gateway.continuity_capsules import checkpoint_runtime_continuity
 
 
 from hermes_constants import OPENROUTER_BASE_URL
@@ -7435,6 +7451,19 @@ class AIAgent:
             f"{approx_tokens:,}" if approx_tokens else "unknown", self.model,
             focus_topic,
         )
+        try:
+            _session_key = os.getenv("HERMES_SESSION_KEY", "").strip()
+            if _session_key:
+                checkpoint_runtime_continuity(
+                    session_key=_session_key,
+                    session_id=self.session_id or "",
+                    messages=messages,
+                    reason="context_compression",
+                    latest_user_text=_latest_user_text_from_messages(messages),
+                    profile="work" if (self.platform or os.environ.get("HERMES_SESSION_SOURCE", "cli")) == "cli" else "ops",
+                )
+        except Exception as _cont_exc:
+            logger.debug("Continuity checkpoint before compression failed: %s", _cont_exc)
         # Pre-compression memory flush: let the model save memories before they're lost
         self.flush_memories(messages, min_turns=0)
 

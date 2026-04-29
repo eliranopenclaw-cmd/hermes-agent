@@ -251,6 +251,8 @@ class TelegramAdapter(BasePlatformAdapter):
         self._model_picker_state: Dict[str, dict] = {}
         # Approval button state: message_id → session_key
         self._approval_state: Dict[int, str] = {}
+        # Quick-reply button state: action_id → reply payload
+        self._quick_reply_state: Dict[int, Dict[str, Any]] = {}
 
     @staticmethod
     def _is_callback_user_authorized(user_id: str) -> bool:
@@ -333,6 +335,52 @@ class TelegramAdapter(BasePlatformAdapter):
         if LinkPreviewOptions is not None:
             return {"link_preview_options": LinkPreviewOptions(is_disabled=True)}
         return {"disable_web_page_preview": True}
+
+    def _next_interaction_id(self) -> str:
+        import secrets
+
+        existing = getattr(self, "_quick_reply_state", {})
+        while True:
+            candidate = secrets.token_hex(8)
+            if candidate not in existing:
+                return candidate
+
+    def _build_quick_reply_event(self, query: Any, reply_text: str) -> MessageEvent:
+        """Convert a Telegram callback click into a synthetic inbound text event."""
+        message = query.message
+        chat = message.chat
+        user = query.from_user
+
+        chat_type = "dm"
+        if chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
+            chat_type = "group"
+        elif chat.type == ChatType.CHANNEL:
+            chat_type = "channel"
+
+        thread_id_raw = getattr(message, "message_thread_id", None)
+        thread_id_str = str(thread_id_raw) if thread_id_raw is not None else None
+        if chat_type == "group" and thread_id_str is None and getattr(chat, "is_forum", False):
+            thread_id_str = self._GENERAL_TOPIC_THREAD_ID
+
+        source = self.build_source(
+            chat_id=str(chat.id),
+            chat_name=chat.title or (chat.full_name if hasattr(chat, "full_name") else None),
+            chat_type=chat_type,
+            user_id=str(user.id) if user else (str(chat.id) if chat_type == "dm" else None),
+            user_name=user.full_name if user else (chat.full_name if hasattr(chat, "full_name") and chat_type == "dm" else None),
+            thread_id=thread_id_str,
+        )
+
+        reply_to_text = getattr(message, "text", None) or getattr(message, "caption", None)
+        return MessageEvent(
+            text=reply_text,
+            message_type=MessageType.TEXT,
+            source=source,
+            raw_message=message,
+            message_id=str(getattr(message, "message_id", "") or ""),
+            reply_to_message_id=str(getattr(message, "message_id", "") or ""),
+            reply_to_text=reply_to_text,
+        )
 
     async def _clear_stale_polling_webhook(self) -> bool:
         """Best-effort webhook cleanup before entering polling mode.
@@ -1024,6 +1072,14 @@ class TelegramAdapter(BasePlatformAdapter):
             
             message_ids = []
             thread_id = self._metadata_thread_id(metadata)
+            quick_reply_text = None
+            quick_reply_label = None
+            quick_reply_id = None
+            if metadata and metadata.get("quick_reply_text"):
+                quick_reply_text = str(metadata.get("quick_reply_text", "")).strip()
+                quick_reply_label = str(metadata.get("quick_reply_label") or "✅ Approve")
+                if quick_reply_text:
+                    quick_reply_id = self._next_interaction_id()
             
             try:
                 from telegram.error import NetworkError as _NetErr
@@ -1044,6 +1100,11 @@ class TelegramAdapter(BasePlatformAdapter):
                 should_thread = self._should_thread_reply(reply_to, i)
                 reply_to_id = int(reply_to) if should_thread else None
                 effective_thread_id = self._message_thread_id_for_send(thread_id)
+                reply_markup = None
+                if quick_reply_text and quick_reply_id is not None and i == len(chunks) - 1:
+                    reply_markup = InlineKeyboardMarkup([
+                        [InlineKeyboardButton(quick_reply_label or "✅ Approve", callback_data=f"qr:{quick_reply_id}")]
+                    ])
 
                 msg = None
                 for _send_attempt in range(3):
@@ -1056,6 +1117,7 @@ class TelegramAdapter(BasePlatformAdapter):
                                 parse_mode=ParseMode.MARKDOWN_V2,
                                 reply_to_message_id=reply_to_id,
                                 message_thread_id=effective_thread_id,
+                                reply_markup=reply_markup,
                                 **self._link_preview_kwargs(),
                             )
                         except Exception as md_error:
@@ -1069,6 +1131,7 @@ class TelegramAdapter(BasePlatformAdapter):
                                     parse_mode=None,
                                     reply_to_message_id=reply_to_id,
                                     message_thread_id=effective_thread_id,
+                                    reply_markup=reply_markup,
                                     **self._link_preview_kwargs(),
                                 )
                             else:
@@ -1131,6 +1194,12 @@ class TelegramAdapter(BasePlatformAdapter):
                                 continue
                         raise
                 message_ids.append(str(msg.message_id))
+                if quick_reply_text and quick_reply_id is not None and i == len(chunks) - 1:
+                    self._quick_reply_state[quick_reply_id] = {
+                        "reply_text": quick_reply_text,
+                        "chat_id": str(chat_id),
+                        "message_id": str(msg.message_id),
+                    }
             
             return SendResult(
                 success=True,
@@ -1696,6 +1765,52 @@ class TelegramAdapter(BasePlatformAdapter):
                     )
                 except Exception as exc:
                     logger.error("Failed to resolve gateway approval from Telegram button: %s", exc)
+            return
+
+        # --- Quick-reply callbacks (qr:id) ---
+        if data.startswith("qr:"):
+            action_id = str(data.split(":", 1)[1] or "").strip()
+            if not action_id:
+                await query.answer(text="Invalid approval data.")
+                return
+
+            caller_id = str(getattr(query.from_user, "id", ""))
+            if not self._is_callback_user_authorized(caller_id):
+                await query.answer(text="⛔ You are not authorized to approve execution.")
+                return
+
+            state = self._quick_reply_state.get(action_id)
+            if not state:
+                await query.answer(text="This approval has already been resolved.")
+                return
+
+            expected_chat_id = str(state.get("chat_id") or "")
+            actual_chat_id = str(getattr(getattr(query, "message", None), "chat", None).id)
+            expected_message_id = str(state.get("message_id") or "")
+            actual_message_id = str(getattr(getattr(query, "message", None), "message_id", "") or "")
+            if (
+                (expected_chat_id and actual_chat_id != expected_chat_id)
+                or (expected_message_id and actual_message_id != expected_message_id)
+            ):
+                await query.answer(text="This approval button is no longer valid.")
+                return
+
+            reply_text = str(state.get("reply_text") or "").strip()
+            if reply_text:
+                event = self._build_quick_reply_event(query, reply_text)
+                event.text = self._clean_bot_trigger_text(event.text)
+                try:
+                    await self.handle_message(event)
+                except Exception:
+                    await query.answer(text="⚠️ Failed to send execution approval. Please try again.")
+                    raise
+
+            self._quick_reply_state.pop(action_id, None)
+            await query.answer(text="✅ Execution approval sent")
+            try:
+                await query.edit_message_reply_markup(reply_markup=None)
+            except Exception:
+                pass
             return
 
         # --- Update prompt callbacks ---

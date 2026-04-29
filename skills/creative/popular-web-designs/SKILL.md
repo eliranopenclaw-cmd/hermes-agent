@@ -99,7 +99,6 @@ substitute that preserves the design's character. Common mappings:
 | HashiCorp Sans | Inter | Enterprise, neutral |
 | waldenburgNormal (Sanity) | Space Grotesk | Geometric, slightly condensed |
 | IBM Plex Sans/Mono | IBM Plex Sans/Mono | Available on Google Fonts |
-| Rubik (Sentry) | Rubik | Available on Google Fonts |
 
 When a template's CDN font matches the original (Inter, IBM Plex, Rubik, Geist), no
 substitution loss occurs. When a substitute is used (DM Sans for Circular, Source Sans 3
@@ -137,7 +136,6 @@ those carry more visual identity than the specific font face.
 | `posthog.md` | PostHog | Playful branding, developer-friendly dark UI |
 | `raycast.md` | Raycast | Sleek dark chrome, vibrant gradient accents |
 | `resend.md` | Resend | Minimal dark theme, monospace accents |
-| `sentry.md` | Sentry | Dark dashboard, data-dense, pink-purple accent |
 | `supabase.md` | Supabase | Dark emerald theme, code-first developer tool |
 | `superhuman.md` | Superhuman | Premium dark UI, keyboard-first, purple glow |
 | `vercel.md` | Vercel | Black and white precision, Geist font system |
@@ -196,12 +194,10 @@ those carry more visual identity than the specific font face.
 
 Match the design to the content:
 
-- **Developer tools / dashboards:** Linear, Vercel, Supabase, Raycast, Sentry
 - **Documentation / content sites:** Mintlify, Notion, Sanity, MongoDB
 - **Marketing / landing pages:** Stripe, Framer, Apple, SpaceX
 - **Dark mode UIs:** Linear, Cursor, ElevenLabs, Warp, Superhuman
 - **Light / clean UIs:** Vercel, Stripe, Notion, Cal.com, Replicate
 - **Playful / friendly:** PostHog, Figma, Lovable, Zapier, Miro
 - **Premium / luxury:** Apple, BMW, Stripe, Superhuman, Revolut
-- **Data-dense / dashboards:** Sentry, Kraken, Cohere, ClickHouse
 - **Monospace / terminal aesthetic:** Ollama, OpenCode, x.ai, VoltAgent

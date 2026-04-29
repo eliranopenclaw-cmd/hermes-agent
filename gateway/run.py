@@ -276,9 +276,14 @@ from gateway.session import (
     SessionStore,
     SessionSource,
     SessionContext,
+    SessionEntry,
     build_session_context,
     build_session_context_prompt,
     build_session_key,
+)
+from gateway.continuity_capsules import (
+    build_resume_packet_for_scope,
+    checkpoint_runtime_continuity,
 )
 from gateway.delivery import DeliveryRouter
 from gateway.platforms.base import (
@@ -390,6 +395,26 @@ def _build_media_placeholder(event) -> str:
         else:
             parts.append(f"[User sent a file: {url}]")
     return "\n".join(parts)
+
+
+_TTS_SYNTHETIC_ANNOTATION_RE = re.compile(
+    r"\[(?:The user sent|User sent)\b[^\]]*\]",
+    flags=re.IGNORECASE,
+)
+
+
+def _strip_synthetic_annotations_for_tts(text: str) -> str:
+    """Remove gateway-internal media/sticker annotations before TTS.
+
+    These annotations are useful for model context but sound unnatural when
+    spoken back to the user in an auto-generated voice reply.
+    """
+    if not text or "sent" not in text or "[" not in text:
+        return text
+    cleaned = _TTS_SYNTHETIC_ANNOTATION_RE.sub(" ", text)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
 
 
 def _dequeue_pending_event(adapter, session_key: str) -> MessageEvent | None:
@@ -707,11 +732,11 @@ class GatewayRunner:
             self._session_db = SessionDB()
         except Exception as e:
             logger.debug("SQLite session store not available: %s", e)
-        
+
         # DM pairing store for code-based user authorization
         from gateway.pairing import PairingStore
         self.pairing_store = PairingStore()
-        
+
         # Event hook system
         from gateway.hooks import HookRegistry
         self.hooks = HookRegistry()
@@ -722,6 +747,59 @@ class GatewayRunner:
         # Track background tasks to prevent garbage collection mid-execution
         self._background_tasks: set = set()
 
+    def _checkpoint_continuity_capsule(
+        self,
+        *,
+        session_key: str,
+        session_id: str,
+        history: list[dict[str, Any]],
+        reason: str,
+        latest_user_text: str = "",
+        profile: str = "ops",
+        reset_posture: str = "safe_to_resume",
+    ) -> Path | None:
+        if not session_key or not history:
+            return None
+        try:
+            root = getattr(self, "_continuity_storage_root", None)
+            return checkpoint_runtime_continuity(
+                session_key=session_key,
+                session_id=session_id,
+                messages=history,
+                reason=reason,
+                latest_user_text=latest_user_text,
+                profile=profile,
+                root=root,
+                reset_posture=reset_posture,
+            )
+        except Exception as e:
+            logger.debug("Continuity checkpoint failed for %s: %s", session_key[:20], e)
+            return None
+
+    def _inject_continuity_resume_packet(
+        self,
+        context_prompt: str,
+        session_entry: SessionEntry,
+        session_key: str,
+    ) -> str:
+        if not getattr(session_entry, "resume_pending", False):
+            return context_prompt
+        try:
+            root = getattr(self, "_continuity_storage_root", None)
+            packet = build_resume_packet_for_scope(root, session_key)
+        except Exception as e:
+            logger.debug("Continuity resume packet load failed for %s: %s", session_key[:20], e)
+            packet = None
+        if not packet:
+            return context_prompt
+        reason = getattr(session_entry, "resume_reason", "") or "restart_timeout"
+        reason_text = "gateway shutdown" if reason == "shutdown_timeout" else "gateway restart"
+        note = (
+            "[System note: The previous turn was interrupted by a "
+            f"{reason_text}. Use the continuity capsule below as the "
+            "authoritative resume state before relying on deeper transcript replay.]"
+        )
+        return context_prompt + "\n\n" + note + "\n\n" + packet
 
     def _warn_if_docker_media_delivery_is_risky(self) -> None:
         """Warn when Docker-backed gateways lack an explicit export mount.
@@ -1536,6 +1614,36 @@ class GatewayRunner:
         if not adapter:
             return False  # let default path handle it
 
+        running_agent = self._running_agents.get(session_key)
+        now = time.time()
+        _startup_grace = float(os.getenv("HERMES_ACTIVE_SESSION_STARTUP_GRACE_SECONDS", "15"))
+        _active_event = getattr(adapter, "_active_sessions", {}).get(session_key)
+        _active_started_at = float(getattr(_active_event, "_hermes_started_at", 0) or 0)
+        _active_age = (now - _active_started_at) if _active_started_at else 0.0
+        _run_started_at = float(self._running_agents_ts.get(session_key, 0) or 0)
+        _run_age = (now - _run_started_at) if _run_started_at else 0.0
+
+        _stale_active_session = running_agent is None and _active_age > _startup_grace
+        _stale_pending_sentinel = (
+            running_agent is _AGENT_PENDING_SENTINEL
+            and _active_age > _startup_grace
+            and (_run_age == 0.0 or _run_age > _startup_grace)
+        )
+        if _stale_active_session or _stale_pending_sentinel:
+            logger.warning(
+                "Clearing stale active-session guard for %s (agent=%s, active_age=%.1fs, run_age=%.1fs)",
+                session_key[:30],
+                "sentinel" if running_agent is _AGENT_PENDING_SENTINEL else "missing",
+                _active_age,
+                _run_age,
+            )
+            getattr(adapter, "_pending_messages", {}).pop(session_key, None)
+            getattr(adapter, "_active_sessions", {}).pop(session_key, None)
+            self._pending_messages.pop(session_key, None)
+            self._release_running_agent_state(session_key)
+            await adapter.handle_message(event)
+            return True
+
         # Store the message so it's processed as the next turn after the
         # interrupt causes the current run to exit.
         from gateway.platforms.base import merge_pending_message_event
@@ -1543,7 +1651,6 @@ class GatewayRunner:
 
         # Interrupt the running agent — this aborts in-flight tool calls and
         # causes the agent loop to exit at the next check point.
-        running_agent = self._running_agents.get(session_key)
         if running_agent and running_agent is not _AGENT_PENDING_SENTINEL:
             try:
                 running_agent.interrupt(event.text)
@@ -1553,7 +1660,6 @@ class GatewayRunner:
         # Debounce: only send an acknowledgment once every 30 seconds per session
         # to avoid spamming the user when they send multiple messages quickly
         _BUSY_ACK_COOLDOWN = 30
-        now = time.time()
         last_ack = self._busy_ack_ts.get(session_key, 0)
         if now - last_ack < _BUSY_ACK_COOLDOWN:
             return True  # interrupt sent, ack already delivered recently
@@ -2551,6 +2657,20 @@ class GatewayRunner:
                     if _agent is _AGENT_PENDING_SENTINEL:
                         continue
                     try:
+                        _history = list(getattr(_agent, "_session_messages", None) or [])
+                        if not _history:
+                            try:
+                                _history = self.session_store.load_transcript(getattr(_agent, "session_id", ""))
+                            except Exception:
+                                _history = []
+                        self._checkpoint_continuity_capsule(
+                            session_key=_sk,
+                            session_id=getattr(_agent, "session_id", "") or "",
+                            history=_history,
+                            reason=_resume_reason,
+                            latest_user_text="",
+                            profile="ops",
+                        )
                         self.session_store.mark_resume_pending(_sk, _resume_reason)
                     except Exception as _e:
                         logger.debug(
@@ -4002,6 +4122,11 @@ class GatewayRunner:
 
         # Build the context prompt to inject
         context_prompt = build_session_context_prompt(context, redact_pii=_redact_pii)
+        context_prompt = self._inject_continuity_resume_packet(
+            context_prompt,
+            session_entry,
+            session_key,
+        )
         
         # If the previous session expired and was auto-reset, prepend a notice
         # so the agent knows this is a fresh conversation (not an intentional /reset).
@@ -4275,6 +4400,15 @@ class GatewayRunner:
                     )
 
                     _hyg_meta = {"thread_id": source.thread_id} if source.thread_id else None
+
+                    self._checkpoint_continuity_capsule(
+                        session_key=session_key,
+                        session_id=session_entry.session_id,
+                        history=history,
+                        reason="gateway_hygiene_compression",
+                        latest_user_text=getattr(event, "text", "") or "",
+                        profile="ops",
+                    )
 
                     try:
                         from run_agent import AIAgent
@@ -6217,6 +6351,7 @@ class GatewayRunner:
             from tools.tts_tool import text_to_speech_tool, _strip_markdown_for_tts
 
             tts_text = _strip_markdown_for_tts(text[:4000])
+            tts_text = _strip_synthetic_annotations_for_tts(tts_text)
             if not tts_text:
                 return
 

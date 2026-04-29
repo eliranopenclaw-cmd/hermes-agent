@@ -167,6 +167,32 @@ class TestTelegramExecApproval:
         assert "..." in kwargs["text"]
         assert len(kwargs["text"]) < 5000
 
+    @pytest.mark.asyncio
+    async def test_send_attaches_quick_reply_button_when_metadata_requests_it(self):
+        adapter = _make_adapter()
+        mock_msg = MagicMock()
+        mock_msg.message_id = 77
+        adapter._bot.send_message = AsyncMock(return_value=mock_msg)
+
+        result = await adapter.send(
+            chat_id="12345",
+            content="# Daily Execution Recommendation\nApprove today",
+            metadata={
+                "quick_reply_text": "APPROVE EXECUTE TODAY",
+                "quick_reply_label": "✅ Approve Execute Today",
+            },
+        )
+
+        assert result.success is True
+        kwargs = adapter._bot.send_message.call_args[1]
+        assert kwargs["reply_markup"] is not None
+        assert len(adapter._quick_reply_state) == 1
+        action_id = list(adapter._quick_reply_state.keys())[0]
+        assert isinstance(action_id, str)
+        assert adapter._quick_reply_state[action_id]["reply_text"] == "APPROVE EXECUTE TODAY"
+        assert adapter._quick_reply_state[action_id]["chat_id"] == "12345"
+        assert adapter._quick_reply_state[action_id]["message_id"] == "77"
+
 
 # ===========================================================================
 # _handle_callback_query — approval button clicks
@@ -187,6 +213,7 @@ class TestTelegramApprovalCallback:
         query.message = MagicMock()
         query.message.chat_id = 12345
         query.from_user = MagicMock()
+        query.from_user.id = 1006085092
         query.from_user.first_name = "Norbert"
         query.answer = AsyncMock()
         query.edit_message_text = AsyncMock()
@@ -196,7 +223,8 @@ class TestTelegramApprovalCallback:
         context = MagicMock()
 
         with patch("tools.approval.resolve_gateway_approval", return_value=1) as mock_resolve:
-            await adapter._handle_callback_query(update, context)
+            with patch.dict(os.environ, {"TELEGRAM_ALLOWED_USERS": "1006085092"}):
+                await adapter._handle_callback_query(update, context)
 
         mock_resolve.assert_called_once_with("agent:main:telegram:group:12345:99", "once")
         query.answer.assert_called_once()
@@ -215,6 +243,7 @@ class TestTelegramApprovalCallback:
         query.message = MagicMock()
         query.message.chat_id = 12345
         query.from_user = MagicMock()
+        query.from_user.id = 1006085092
         query.from_user.first_name = "Alice"
         query.answer = AsyncMock()
         query.edit_message_text = AsyncMock()
@@ -224,11 +253,94 @@ class TestTelegramApprovalCallback:
         context = MagicMock()
 
         with patch("tools.approval.resolve_gateway_approval", return_value=1) as mock_resolve:
-            await adapter._handle_callback_query(update, context)
+            with patch.dict(os.environ, {"TELEGRAM_ALLOWED_USERS": "1006085092"}):
+                await adapter._handle_callback_query(update, context)
 
         mock_resolve.assert_called_once_with("some-session", "deny")
         edit_kwargs = query.edit_message_text.call_args[1]
         assert "Denied" in edit_kwargs["text"]
+
+    @pytest.mark.asyncio
+    async def test_quick_reply_button_dispatches_synthetic_message(self):
+        adapter = _make_adapter()
+        adapter._bot.username = "OCsecondbrainhermes_bot"
+        adapter._quick_reply_state["qr-token"] = {
+            "reply_text": "APPROVE EXECUTE TODAY",
+            "chat_id": "12345",
+            "message_id": "555",
+        }
+        adapter.handle_message = AsyncMock()
+
+        query = AsyncMock()
+        query.data = "qr:qr-token"
+        query.message = MagicMock()
+        query.message.chat = MagicMock()
+        query.message.chat.id = 12345
+        query.message.chat.type = "private"
+        query.message.chat.title = None
+        query.message.chat.full_name = "Eliran Aldoroti"
+        query.message.message_thread_id = None
+        query.message.message_id = 555
+        query.message.text = "# Daily Execution Recommendation"
+        query.from_user = MagicMock()
+        query.from_user.id = 1006085092
+        query.from_user.first_name = "Eliran"
+        query.from_user.full_name = "Eliran Aldoroti"
+        query.answer = AsyncMock()
+        query.edit_message_reply_markup = AsyncMock()
+
+        update = MagicMock()
+        update.callback_query = query
+        context = MagicMock()
+
+        await adapter._handle_callback_query(update, context)
+
+        query.answer.assert_called_once()
+        query.edit_message_reply_markup.assert_called_once_with(reply_markup=None)
+        adapter.handle_message.assert_called_once()
+        event = adapter.handle_message.call_args[0][0]
+        assert event.text == "APPROVE EXECUTE TODAY"
+        assert event.reply_to_message_id == "555"
+        assert "qr-token" not in adapter._quick_reply_state
+
+    @pytest.mark.asyncio
+    async def test_quick_reply_failure_keeps_state(self):
+        adapter = _make_adapter()
+        adapter._bot.username = "OCsecondbrainhermes_bot"
+        adapter._quick_reply_state["qr-token"] = {
+            "reply_text": "APPROVE EXECUTE TODAY",
+            "chat_id": "12345",
+            "message_id": "555",
+        }
+        adapter.handle_message = AsyncMock(side_effect=RuntimeError("boom"))
+
+        query = AsyncMock()
+        query.data = "qr:qr-token"
+        query.message = MagicMock()
+        query.message.chat = MagicMock()
+        query.message.chat.id = 12345
+        query.message.chat.type = "private"
+        query.message.chat.title = None
+        query.message.chat.full_name = "Eliran Aldoroti"
+        query.message.message_thread_id = None
+        query.message.message_id = 555
+        query.message.text = "# Daily Execution Recommendation"
+        query.from_user = MagicMock()
+        query.from_user.id = 1006085092
+        query.from_user.first_name = "Eliran"
+        query.from_user.full_name = "Eliran Aldoroti"
+        query.answer = AsyncMock()
+        query.edit_message_reply_markup = AsyncMock()
+
+        update = MagicMock()
+        update.callback_query = query
+        context = MagicMock()
+
+        with pytest.raises(RuntimeError, match="boom"):
+            await adapter._handle_callback_query(update, context)
+
+        assert "qr-token" in adapter._quick_reply_state
+        query.edit_message_reply_markup.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_already_resolved(self):
@@ -240,6 +352,7 @@ class TestTelegramApprovalCallback:
         query.message = MagicMock()
         query.message.chat_id = 12345
         query.from_user = MagicMock()
+        query.from_user.id = 1006085092
         query.from_user.first_name = "Bob"
         query.answer = AsyncMock()
 
@@ -248,7 +361,8 @@ class TestTelegramApprovalCallback:
         context = MagicMock()
 
         with patch("tools.approval.resolve_gateway_approval") as mock_resolve:
-            await adapter._handle_callback_query(update, context)
+            with patch.dict(os.environ, {"TELEGRAM_ALLOWED_USERS": "1006085092"}):
+                await adapter._handle_callback_query(update, context)
 
         # Should NOT resolve — already handled
         mock_resolve.assert_not_called()

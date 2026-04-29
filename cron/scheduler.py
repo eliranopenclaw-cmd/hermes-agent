@@ -14,6 +14,7 @@ import contextvars
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -82,6 +83,41 @@ from cron.jobs import get_due_jobs, get_job, mark_job_run, save_job_output, adva
 # response with this marker to suppress delivery.  Output is still saved
 # locally for audit.
 SILENT_MARKER = "[SILENT]"
+
+_TELEGRAM_REPLY_DIRECTIVE_RE = re.compile(
+    r"(?ms)^\s*Reply in Telegram:\s*\n\s*Reply:\s*(?P<reply>[^\n]+)\s*$"
+)
+
+
+def _extract_telegram_quick_reply_directive(content: str) -> tuple[str, Optional[str]]:
+    """Strip a Telegram quick-reply directive and return its reply text.
+
+    Cron reports may end with:
+
+        Reply in Telegram:
+        Reply: APPROVE EXECUTE TODAY
+
+    We remove those operator-instruction lines from the delivered text and,
+    when present, convert them into native Telegram button metadata.
+    """
+    match = _TELEGRAM_REPLY_DIRECTIVE_RE.search(content or "")
+    if not match:
+        return content, None
+    reply_text = (match.group("reply") or "").strip()
+    cleaned = _TELEGRAM_REPLY_DIRECTIVE_RE.sub("", content).strip()
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned, (reply_text or None)
+
+
+def _telegram_quick_reply_label(reply_text: str) -> str:
+    """Build a short operator-facing label for a Telegram quick-reply button."""
+    normalized = " ".join((reply_text or "").strip().split())
+    if normalized.upper() == "APPROVE EXECUTE TODAY":
+        return "✅ Approve Execute Today"
+    titled = normalized.title()[:40].strip() or "Approve"
+    if not titled.startswith("✅"):
+        titled = f"✅ {titled}"
+    return titled
 
 # Resolve Hermes home directory (respects HERMES_HOME override)
 _hermes_home = get_hermes_home()
@@ -327,6 +363,8 @@ def _deliver_result(job: dict, content: str, adapters=None, loop=None) -> Option
     else:
         delivery_content = content
 
+    delivery_content, telegram_quick_reply_text = _extract_telegram_quick_reply_directive(delivery_content)
+
     # Extract MEDIA: tags so attachments are forwarded as files, not raw text
     from gateway.platforms.base import BasePlatformAdapter
     media_files, cleaned_delivery_content = BasePlatformAdapter.extract_media(delivery_content)
@@ -372,7 +410,12 @@ def _deliver_result(job: dict, content: str, adapters=None, loop=None) -> Option
         runtime_adapter = (adapters or {}).get(platform)
         delivered = False
         if runtime_adapter is not None and loop is not None and getattr(loop, "is_running", lambda: False)():
-            send_metadata = {"thread_id": thread_id} if thread_id else None
+            send_metadata = {"thread_id": thread_id} if thread_id else {}
+            if platform == Platform.TELEGRAM and telegram_quick_reply_text:
+                send_metadata["quick_reply_text"] = telegram_quick_reply_text
+                send_metadata["quick_reply_label"] = _telegram_quick_reply_label(telegram_quick_reply_text)
+            if not send_metadata:
+                send_metadata = None
             try:
                 # Send cleaned text (MEDIA tags stripped) — not the raw content
                 text_to_send = cleaned_delivery_content.strip()

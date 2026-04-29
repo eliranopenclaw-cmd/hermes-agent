@@ -15,6 +15,7 @@ import re
 import socket as _socket
 import subprocess
 import sys
+import time
 import uuid
 from abc import ABC, abstractmethod
 from urllib.parse import urlsplit
@@ -1779,7 +1780,9 @@ class BasePlatformAdapter(ABC):
         # starts would also pass the _active_sessions check and spawn a
         # duplicate task.  (grammY sequentialize / aiogram EventIsolation
         # pattern — set the guard synchronously, not inside the task.)
-        self._active_sessions[session_key] = asyncio.Event()
+        _active_event = asyncio.Event()
+        setattr(_active_event, "_hermes_started_at", time.time())
+        self._active_sessions[session_key] = _active_event
 
         # Spawn background task to process this message
         task = asyncio.create_task(self._process_message_background(event, session_key))
@@ -1832,6 +1835,8 @@ class BasePlatformAdapter(ABC):
         # the session active before spawning this task to prevent races).
         # Fall back to a new Event only if the entry was removed externally.
         interrupt_event = self._active_sessions.get(session_key) or asyncio.Event()
+        if not hasattr(interrupt_event, "_hermes_started_at"):
+            setattr(interrupt_event, "_hermes_started_at", time.time())
         self._active_sessions[session_key] = interrupt_event
         callback_generation = getattr(interrupt_event, "_hermes_run_generation", None)
         

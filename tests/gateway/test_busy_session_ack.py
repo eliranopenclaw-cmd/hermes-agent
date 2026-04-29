@@ -209,6 +209,74 @@ class TestBusySessionAck:
         assert adapter._send_with_retry.call_count == 2
 
     @pytest.mark.asyncio
+    async def test_stale_active_session_without_running_agent_self_heals(self):
+        """A leaked active-session guard should be cleared and the message re-dispatched."""
+        runner, _ = _make_runner()
+        adapter = _make_adapter()
+
+        event = _make_event(text="fresh message")
+        sk = build_session_key(event.source)
+
+        stale_event = asyncio.Event()
+        setattr(stale_event, "_hermes_started_at", time.time() - 45)
+        adapter._active_sessions = {sk: stale_event}
+        adapter.handle_message = AsyncMock()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        adapter._send_with_retry.assert_not_called()
+        adapter.handle_message.assert_awaited_once_with(event)
+        assert sk not in adapter._active_sessions
+
+    @pytest.mark.asyncio
+    async def test_recent_active_session_without_running_agent_keeps_busy_ack(self):
+        """The startup race window should not be mistaken for a stale lock."""
+        runner, _ = _make_runner()
+        adapter = _make_adapter()
+
+        event = _make_event(text="startup follow-up")
+        sk = build_session_key(event.source)
+
+        fresh_event = asyncio.Event()
+        setattr(fresh_event, "_hermes_started_at", time.time())
+        adapter._active_sessions = {sk: fresh_event}
+        adapter.handle_message = AsyncMock()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        adapter._send_with_retry.assert_called_once()
+        adapter.handle_message.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_stale_pending_sentinel_self_heals(self):
+        """A leaked startup sentinel should be cleared like any other stale guard."""
+        runner, sentinel = _make_runner()
+        adapter = _make_adapter()
+
+        event = _make_event(text="unlock stuck startup")
+        sk = build_session_key(event.source)
+
+        stale_event = asyncio.Event()
+        setattr(stale_event, "_hermes_started_at", time.time() - 45)
+        adapter._active_sessions = {sk: stale_event}
+        adapter.handle_message = AsyncMock()
+        runner._running_agents[sk] = sentinel
+        runner._running_agents_ts[sk] = time.time() - 45
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        adapter._send_with_retry.assert_not_called()
+        adapter.handle_message.assert_awaited_once_with(event)
+        assert sk not in adapter._active_sessions
+        assert sk not in runner._running_agents
+
+    @pytest.mark.asyncio
     async def test_includes_status_detail(self):
         """Ack message should include iteration and tool info when available."""
         runner, sentinel = _make_runner()

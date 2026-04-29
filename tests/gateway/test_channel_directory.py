@@ -287,6 +287,19 @@ class TestFormatDirectoryForDisplay:
             result = format_directory_for_display()
         assert "No messaging platforms" in result
 
+    def test_whatsapp_display_uses_explicit_jid_target(self, tmp_path):
+        cache_file = _write_directory(tmp_path, {
+            "whatsapp": [
+                {"id": "120363427147164635@g.us", "name": "120363427147164635", "type": "group"},
+            ]
+        })
+        with patch("gateway.channel_directory.DIRECTORY_PATH", cache_file):
+            result = format_directory_for_display()
+
+        assert "Whatsapp:" in result
+        assert "whatsapp:120363427147164635@g.us" in result
+        assert "whatsapp:120363427147164635 (group)" not in result
+
     def test_telegram_display(self, tmp_path):
         cache_file = _write_directory(tmp_path, {
             "telegram": [

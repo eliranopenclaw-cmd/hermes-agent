@@ -58,6 +58,8 @@ def _channel_target_name(platform_name: str, channel: Dict[str, Any]) -> str:
     name = channel["name"]
     if platform_name == "discord" and channel.get("guild"):
         return f"#{name}"
+    if platform_name == "whatsapp":
+        return str(channel.get("id") or name)
     if platform_name != "discord" and channel.get("type"):
         return f"{name} ({channel['type']})"
     return name
